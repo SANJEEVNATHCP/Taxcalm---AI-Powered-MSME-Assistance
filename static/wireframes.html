@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxClam - System Wireframes & Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .wireframe-box {
+            border: 2px dashed #cbd5e0;
+            background: #f7fafc;
+            min-height: 100px;
+        }
+        .component-box {
+            border: 2px solid #4299e1;
+            background: white;
+        }
+        .flow-arrow {
+            border-left: 3px solid #48bb78;
+            border-bottom: 3px solid #48bb78;
+            width: 40px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">📐 TaxClam System Wireframes</h1>
+                    <p class="text-gray-600">Architecture & Mock Diagrams of the Solution</p>
+                </div>
+                <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                    ← Back to App
+                </a>
+            </div>
+        </div>
+
+        <!-- Architecture Overview -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">🏗️ System Architecture</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <!-- Frontend Layer -->
+                <div class="component-box p-6 rounded-xl">
+                    <h3 class="text-xl font-bold text-blue-600 mb-4">Frontend Layer</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-blue-50 p-3 rounded">HTML5 + Tailwind CSS</div>
+                        <div class="bg-blue-50 p-3 rounded">JavaScript (Vanilla)</div>
+                        <div class="bg-blue-50 p-3 rounded">Chart.js</div>
+                        <div class="bg-blue-50 p-3 rounded">GPU.js (AMD Support)</div>
+                        <div class="bg-blue-50 p-3 rounded">PWA (Service Worker)</div>
+                    </div>
+                </div>
+
+                <!-- Backend Layer -->
+                <div class="component-box p-6 rounded-xl">
+                    <h3 class="text-xl font-bold text-green-600 mb-4">Backend Layer</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-green-50 p-3 rounded">Flask (Port 8000)</div>
+                        <div class="bg-green-50 p-3 rounded">FastAPI (Port 8001)</div>
+                        <div class="bg-green-50 p-3 rounded">Python 3.8+</div>
+                        <div class="bg-green-50 p-3 rounded">Flask-CORS</div>
+                        <div class="bg-green-50 p-3 rounded">Uvicorn</div>
+                    </div>
+                </div>
+
+                <!-- Integrations -->
+                <div class="component-box p-6 rounded-xl">
+                    <h3 class="text-xl font-bold text-purple-600 mb-4">Integrations</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="bg-purple-50 p-3 rounded">Google Meet API</div>
+                        <div class="bg-purple-50 p-3 rounded">Zoom API</div>
+                        <div class="bg-purple-50 p-3 rounded">OpenRouter AI</div>
+                        <div class="bg-purple-50 p-3 rounded">HuggingFace Voice</div>
+                        <div class="bg-purple-50 p-3 rounded">RAG System</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Flow -->
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">🔄 Data Flow Architecture</h3>
+                <div class="flex items-center justify-center gap-4 flex-wrap">
+                    <div class="bg-white p-4 rounded-lg shadow">User Browser</div>
+                    <span class="text-2xl">→</span>
+                    <div class="bg-white p-4 rounded-lg shadow">Flask Server (8000)</div>
+                    <span class="text-2xl">→</span>
+                    <div class="bg-white p-4 rounded-lg shadow">Business Logic</div>
+                    <span class="text-2xl">→</span>
+                    <div class="bg-white p-4 rounded-lg shadow">External APIs</div>
+                    <span class="text-2xl">↓</span>
+                </div>
+                <div class="text-center mt-4">
+                    <div class="bg-white p-4 rounded-lg shadow inline-block">LocalStorage (Browser)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Wireframes -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">📄 Page Structure Wireframes</h2>
+            
+            <!-- Dashboard Wireframe -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-700 mb-4">1. Dashboard (index.html)</h3>
+                <div class="wireframe-box p-6 rounded-xl">
+                    <div class="grid grid-cols-12 gap-4">
+                        <!-- Sidebar -->
+                        <div class="col-span-2 bg-blue-100 p-4 rounded">
+                            <div class="text-xs font-semibold mb-2">SIDEBAR</div>
+                            <div class="space-y-2 text-xs">
+                                <div class="bg-white p-2 rounded">🏠 Home</div>
+                                <div class="bg-white p-2 rounded">📊 Calculator</div>
+                                <div class="bg-white p-2 rounded">📈 Trends</div>
+                                <div class="bg-white p-2 rounded">🎯 Schemes</div>
+                                <div class="bg-white p-2 rounded">📚 Knowledge</div>
+                                <div class="bg-white p-2 rounded">🎤 Voice AI</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Main Content -->
+                        <div class="col-span-10 space-y-4">
+                            <!-- Header -->
+                            <div class="bg-green-100 p-4 rounded">
+                                <div class="text-xs font-semibold">HEADER - TaxClam Logo | Search | Profile | Settings</div>
+                            </div>
+                            
+                            <!-- Calculator Section -->
+                            <div class="bg-yellow-100 p-4 rounded">
+                                <div class="text-xs font-semibold mb-2">GST CALCULATOR</div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="bg-white p-2 rounded text-xs">Sales Input</div>
+                                    <div class="bg-white p-2 rounded text-xs">Purchases Input</div>
+                                    <div class="bg-white p-2 rounded text-xs">GST Rate</div>
+                                </div>
+                            </div>
+
+                            <!-- Charts Section -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-purple-100 p-4 rounded">
+                                    <div class="text-xs font-semibold">EXPENSE BREAKDOWN CHART</div>
+                                </div>
+                                <div class="bg-purple-100 p-4 rounded">
+                                    <div class="text-xs font-semibold">COMPARISON CHART</div>
+                                </div>
+                            </div>
+
+                            <!-- History Section -->
+                            <div class="bg-orange-100 p-4 rounded">
+                                <div class="text-xs font-semibold">CALCULATION HISTORY (Last 50)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Trends Wireframe -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-700 mb-4">2. Business Trends (business-trends.html)</h3>
+                <div class="wireframe-box p-6 rounded-xl">
+                    <div class="space-y-4">
+                        <div class="bg-blue-100 p-4 rounded">
+                            <div class="text-xs font-semibold">UPLOAD SECTION - CSV/JSON/Excel Upload</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-green-100 p-4 rounded">
+                                <div class="text-xs font-semibold">REVENUE TRENDS CHART</div>
+                            </div>
+                            <div class="bg-green-100 p-4 rounded">
+                                <div class="text-xs font-semibold">EXPENSE TRENDS CHART</div>
+                            </div>
+                        </div>
+                        <div class="bg-purple-100 p-4 rounded">
+                            <div class="text-xs font-semibold">KEY METRICS DASHBOARD</div>
+                            <div class="grid grid-cols-4 gap-2 mt-2">
+                                <div class="bg-white p-2 rounded text-xs">Total Revenue</div>
+                                <div class="bg-white p-2 rounded text-xs">Growth %</div>
+                                <div class="bg-white p-2 rounded text-xs">Profit Margin</div>
+                                <div class="bg-white p-2 rounded text-xs">GST Liability</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GPU Demo Wireframe -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-700 mb-4">3. GPU Acceleration Demo (gpu-demo.html)</h3>
+                <div class="wireframe-box p-6 rounded-xl">
+                    <div class="space-y-4">
+                        <div class="bg-red-100 p-4 rounded">
+                            <div class="text-xs font-semibold">AMD GPU DETECTION CARD</div>
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                <div class="bg-white p-2 rounded text-xs">GPU Vendor</div>
+                                <div class="bg-white p-2 rounded text-xs">GPU Renderer</div>
+                                <div class="bg-white p-2 rounded text-xs">Status</div>
+                                <div class="bg-white p-2 rounded text-xs">Backend</div>
+                            </div>
+                        </div>
+                        <div class="bg-yellow-100 p-4 rounded">
+                            <div class="text-xs font-semibold">PERFORMANCE BENCHMARK TOOL</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-red-50 p-4 rounded text-center">
+                                <div class="text-xs font-semibold">CPU Time</div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded text-center">
+                                <div class="text-xs font-semibold">GPU Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zoom Scheduler Wireframe -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-gray-700 mb-4">4. Meeting Scheduler (zoom-scheduler.html)</h3>
+                <div class="wireframe-box p-6 rounded-xl">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-100 p-4 rounded">
+                            <div class="text-xs font-semibold mb-2">MEETING FORM</div>
+                            <div class="space-y-2">
+                                <div class="bg-white p-2 rounded text-xs">Topic</div>
+                                <div class="bg-white p-2 rounded text-xs">Date & Time</div>
+                                <div class="bg-white p-2 rounded text-xs">Duration</div>
+                                <div class="bg-white p-2 rounded text-xs">Participants</div>
+                            </div>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded">
+                            <div class="text-xs font-semibold">UPCOMING MEETINGS LIST</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Component Library -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">🧩 Reusable Components</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Navigation Component -->
+                <div class="border-2 border-gray-200 p-4 rounded-xl">
+                    <h3 class="font-bold text-gray-700 mb-3">Navigation Sidebar</h3>
+                    <div class="bg-gray-50 p-4 rounded space-y-2 text-sm">
+                        <div>✓ Collapsible sidebar</div>
+                        <div>✓ Active state indicator</div>
+                        <div>✓ Icon + Label layout</div>
+                        <div>✓ Responsive (mobile drawer)</div>
+                    </div>
+                </div>
+
+                <!-- Calculator Component -->
+                <div class="border-2 border-gray-200 p-4 rounded-xl">
+                    <h3 class="font-bold text-gray-700 mb-3">GST Calculator Widget</h3>
+                    <div class="bg-gray-50 p-4 rounded space-y-2 text-sm">
+                        <div>✓ Real-time calculation</div>
+                        <div>✓ Input validation</div>
+                        <div>✓ Template presets</div>
+                        <div>✓ Results visualization</div>
+                    </div>
+                </div>
+
+                <!-- Chart Component -->
+                <div class="border-2 border-gray-200 p-4 rounded-xl">
+                    <h3 class="font-bold text-gray-700 mb-3">Chart Visualizations</h3>
+                    <div class="bg-gray-50 p-4 rounded space-y-2 text-sm">
+                        <div>✓ Doughnut charts (Chart.js)</div>
+                        <div>✓ Line charts (trends)</div>
+                        <div>✓ Bar charts (comparison)</div>
+                        <div>✓ Dark mode support</div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Component -->
+                <div class="border-2 border-gray-200 p-4 rounded-xl">
+                    <h3 class="font-bold text-gray-700 mb-3">AI Voice Assistant</h3>
+                    <div class="bg-gray-50 p-4 rounded space-y-2 text-sm">
+                        <div>✓ Voice input (mic button)</div>
+                        <div>✓ Text chat interface</div>
+                        <div>✓ Context-aware responses</div>
+                        <div>✓ Multi-language support</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech Stack Details -->
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">⚙️ Technology Stack Details</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Frontend Stack -->
+                <div>
+                    <h3 class="text-xl font-bold text-blue-600 mb-4">Frontend Technologies</h3>
+                    <table class="w-full text-sm">
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">UI Framework</td>
+                            <td class="py-2">Tailwind CSS 3.x</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">Charts</td>
+                            <td class="py-2">Chart.js 3.9.1</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">PDF Export</td>
+                            <td class="py-2">html2pdf.js</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">GPU Acceleration</td>
+                            <td class="py-2">GPU.js (AMD/NVIDIA/Intel)</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">PWA</td>
+                            <td class="py-2">Service Worker + Manifest</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Backend Stack -->
+                <div>
+                    <h3 class="text-xl font-bold text-green-600 mb-4">Backend Technologies</h3>
+                    <table class="w-full text-sm">
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">Web Framework</td>
+                            <td class="py-2">Flask 3.0 + FastAPI</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">Server</td>
+                            <td class="py-2">Gunicorn + Uvicorn</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">AI Integration</td>
+                            <td class="py-2">OpenRouter API</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">Voice AI</td>
+                            <td class="py-2">HuggingFace Hub</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-2 font-semibold">Security</td>
+                            <td class="py-2">JWT + bcrypt + cryptography</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Flow Diagram -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">🔄 User Flow Diagram</h2>
+            
+            <div class="space-y-6">
+                <!-- Entry Point -->
+                <div class="text-center">
+                    <div class="inline-block bg-green-500 text-white px-8 py-4 rounded-full font-bold">
+                        User Visits TaxClam
+                    </div>
+                </div>
+
+                <div class="text-center text-2xl">↓</div>
+
+                <!-- Main Actions -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-blue-100 p-6 rounded-xl text-center">
+                        <div class="font-bold mb-2">Calculate GST</div>
+                        <div class="text-xs">Quick calculation</div>
+                        <div class="text-xs">↓</div>
+                        <div class="text-xs">View Results</div>
+                        <div class="text-xs">↓</div>
+                        <div class="text-xs">Export PDF</div>
+                    </div>
+                    <div class="bg-purple-100 p-6 rounded-xl text-center">
+                        <div class="font-bold mb-2">Analyze Trends</div>
+                        <div class="text-xs">Upload data</div>
+                        <div class="text-xs">↓</div>
+                        <div class="text-xs">View analytics</div>
+                        <div class="text-xs">↓</div>
+                        <div class="text-xs">Download report</div>
+                    </div>
+                    <div class="bg-orange-100 p-6 rounded-xl text-center">
+                        <div class="font-bold mb-2">Schedule Meeting</div>
+                        <div class="text-xs">Book consultation</div>
+                        <div class="text-xs">↓</div>
+                        <div class="text-xs">Get meeting link</div>
+                        <div class="text-xs">↓</div>
+                        <div class="text-xs">Email notification</div>
+                    </div>
+                </div>
+
+                <div class="text-center text-2xl">↓</div>
+
+                <!-- End State -->
+                <div class="text-center">
+                    <div class="inline-block bg-green-500 text-white px-8 py-4 rounded-full font-bold">
+                        Business Insights + Compliance
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

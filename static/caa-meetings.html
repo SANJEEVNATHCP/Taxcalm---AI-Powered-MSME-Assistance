@@ -1,0 +1,1047 @@
+<!-- CAA Meetings - Finance Section -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAA Meetings - Finance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .breadcrumb {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .breadcrumb a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 25px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            background: transparent;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-button:hover {
+            background: #f9f9f9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        input[type="time"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="date"]:focus,
+        input[type="time"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.85em;
+            flex: 1;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .meeting-card {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .meeting-card h3 {
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meeting-card .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-scheduled {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .meeting-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .meta-icon {
+            font-size: 1.2em;
+        }
+
+        .meeting-link {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 12px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .meeting-link strong {
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .meeting-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            display: inline-block;
+            padding: 8px 15px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .meeting-link a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .meeting-link small {
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .meeting-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-filter button {
+            padding: 8px 16px;
+            font-size: 0.9em;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            color: #333;
+            flex: 0 1 auto;
+        }
+
+        .status-filter button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* Amazon-style Auditor Cards */
+        .auditor-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .auditor-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .auditor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .auditor-card.selected {
+            border-color: #667eea;
+            border-width: 3px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #fff 100%);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .auditor-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .auditor-info {
+            text-align: center;
+        }
+
+        .auditor-info h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .auditor-info .specialization {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+            min-height: 40px;
+            display: block;
+        }
+
+        .auditor-info .rating {
+            color: #f59e0b;
+            font-size: 0.95em;
+            margin: 10px 0 5px 0;
+        }
+
+        .auditor-info .rating span {
+            color: #666;
+            font-size: 0.85em;
+            margin-left: 5px;
+        }
+
+        .auditor-info .experience {
+            color: #999;
+            font-size: 0.8em;
+            display: inline-block;
+            background: #f5f5f5;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+
+        .auditor-card .select-btn {
+            margin-top: 15px;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .auditor-card:hover .select-btn {
+            background: #5568d3;
+        }
+
+        .auditor-card.selected .select-btn {
+            background: #10b981;
+            content: '✓ Selected';
+        }
+
+        .auditor-card.selected .select-btn::before {
+            content: '✓ ';
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .meeting-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .auditor-cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">← Back to Home</a> | Finance → CAA Meetings
+        </div>
+
+        <div class="header">
+            <h1>📅 CAA Meetings</h1>
+            <p>Schedule and manage CAA (Chartered Accountant Association) meetings with video conferencing</p>
+        </div>
+
+        <div class="card">
+            <div class="alert alert-info" id="infoAlert" style="display: block;">
+                📌 Schedule CAA meetings with automatic Zoom link generation. All meetings are stored for compliance and audit purposes.
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('schedule')">Schedule Meeting</button>
+                <button class="tab-button" onclick="switchTab('my-meetings')">My Meetings</button>
+                <button class="tab-button" onclick="switchTab('guidelines')">Guidelines</button>
+            </div>
+
+            <!-- Schedule Tab -->
+            <div id="schedule" class="tab-content active">
+                <form id="caaForm" onsubmit="scheduleMeeting(event)">
+                    <h2 style="margin-bottom: 20px; color: #333;">Schedule a CAA Meeting</h2>
+
+                    <div class="form-group">
+                        <label for="meetingTitle">📋 Meeting Title *</label>
+                        <input type="text" id="meetingTitle" placeholder="e.g., Tax Consultation" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="meetingDate">📅 Date *</label>
+                            <input type="date" id="meetingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="meetingTime">⏰ Time *</label>
+                            <input type="time" id="meetingTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="organizerName">👤 Your Name *</label>
+                            <input type="text" id="organizerName" placeholder="Your name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="organizerEmail">📧 Your Email *</label>
+                            <input type="email" id="organizerEmail" placeholder="your.email@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 15px;">🎓 Select Your Auditor/CA (Optional)</label>
+                        <div class="auditor-cards-container">
+                            <div class="auditor-card" onclick="selectAuditor('CA Rajesh Kumar', 'GST & Income Tax Expert', '5', this)">
+                                <div class="auditor-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                    <span style="font-size: 32px;">👨‍💼</span>
+                                </div>
+                                <div class="auditor-info">
+                                    <h4>CA Rajesh Kumar</h4>
+                                    <p class="specialization">GST & Income Tax Expert</p>
+                                    <div class="rating">⭐⭐⭐⭐⭐ <span>(5.0)</span></div>
+                                    <span class="experience">15+ years experience</span>
+                                </div>
+                                <div class="select-btn">Select</div>
+                            </div>
+
+                            <div class="auditor-card" onclick="selectAuditor('CA Priya Sharma', 'Corporate Compliance Specialist', '4', this)">
+                                <div class="auditor-avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                    <span style="font-size: 32px;">👩‍💼</span>
+                                </div>
+                                <div class="auditor-info">
+                                    <h4>CA Priya Sharma</h4>
+                                    <p class="specialization">Corporate Compliance</p>
+                                    <div class="rating">⭐⭐⭐⭐ <span>(4.5)</span></div>
+                                    <span class="experience">12+ years experience</span>
+                                </div>
+                                <div class="select-btn">Select</div>
+                            </div>
+
+                            <div class="auditor-card" onclick="selectAuditor('CA Amit Patel', 'MSME Tax Planning Expert', '5', this)">
+                                <div class="auditor-avatar" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                                    <span style="font-size: 32px;">👨‍💼</span>
+                                </div>
+                                <div class="auditor-info">
+                                    <h4>CA Amit Patel</h4>
+                                    <p class="specialization">MSME Tax Planning</p>
+                                    <div class="rating">⭐⭐⭐⭐⭐ <span>(5.0)</span></div>
+                                    <span class="experience">10+ years experience</span>
+                                </div>
+                                <div class="select-btn">Select</div>
+                            </div>
+
+                            <div class="auditor-card" onclick="selectAuditor('CA Neha Verma', 'Small Business Taxation', '4', this)">
+                                <div class="auditor-avatar" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                                    <span style="font-size: 32px;">👩‍💼</span>
+                                </div>
+                                <div class="auditor-info">
+                                    <h4>CA Neha Verma</h4>
+                                    <p class="specialization">Small Business Taxation</p>
+                                    <div class="rating">⭐⭐⭐⭐ <span>(4.8)</span></div>
+                                    <span class="experience">8+ years experience</span>
+                                </div>
+                                <div class="select-btn">Select</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="auditorName" value="">
+                        <input type="hidden" id="auditorRating" value="">
+                        <div id="selectedAuditorDisplay" style="margin-top: 15px; padding: 12px; background: #f0f4ff; border-radius: 8px; display: none; border-left: 4px solid #667eea;">
+                            <strong>Selected:</strong> <span id="selectedAuditorText"></span>
+                            <button type="button" onclick="clearAuditorSelection()" style="float: right; background: transparent; border: none; color: #667eea; cursor: pointer; font-weight: bold;">✕ Clear</button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields with defaults -->
+                    <input type="hidden" id="duration" value="40">
+                    <input type="hidden" id="timezone" value="Asia/Kolkata">
+                    <input type="hidden" id="attendees" value="">
+                    <input type="hidden" id="agenda" value="">
+                    <input type="hidden" id="meetingType" value="Consultation">
+                    <input type="hidden" id="documentRef" value="">
+                    <input type="hidden" id="auditorDetails" value="">
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">
+                            📅 Schedule Meeting
+                        </button>
+                        <button type="reset" class="btn-secondary">Clear</button>
+                    </div>
+                </form>
+
+                <div id="successAlert" class="alert alert-success"></div>
+                <div id="errorAlert" class="alert alert-error"></div>
+            </div>
+
+            <!-- My Meetings Tab -->
+            <div id="my-meetings" class="tab-content">
+                <h2 style="margin-bottom: 20px; color: #333;">My CAA Meetings</h2>
+
+                <div class="status-filter">
+                    <button class="active" onclick="filterMeetings('all')">All</button>
+                    <button onclick="filterMeetings('Scheduled')">Scheduled</button>
+                    <button onclick="filterMeetings('Completed')">Completed</button>
+                    <button onclick="filterMeetings('Cancelled')">Cancelled</button>
+                </div>
+
+                <button class="btn-primary" style="width: 100%; margin-bottom: 20px;" onclick="loadMeetings()">
+                    🔄 Refresh Meetings
+                </button>
+
+                <div id="meetingsList"></div>
+            </div>
+
+            <!-- Guidelines Tab -->
+            <div id="guidelines" class="tab-content">
+                <h2 style="margin-bottom: 20px; color: #333;">📋 CAA Meeting Guidelines</h2>
+
+                <div style="line-height: 1.8; color: #555;">
+                    <h3 style="margin-top: 20px; margin-bottom: 10px; color: #333;">Meeting Preparation</h3>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Prepare all relevant documents before the meeting</li>
+                        <li>Ensure stable internet connection (minimum 2 Mbps recommended)</li>
+                        <li>Test your audio and video 5 minutes before the meeting</li>
+                        <li>Join from a quiet location with proper lighting</li>
+                        <li>Have reference materials readily available</li>
+                    </ul>
+
+                    <h3 style="margin-top: 20px; margin-bottom: 10px; color: #333;">Meeting Conduct</h3>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Be punctual - join 5 minutes before scheduled time</li>
+                        <li>Mute background noise when not speaking</li>
+                        <li>Use professional language and dress code</li>
+                        <li>Avoid multitasking during the meeting</li>
+                        <li>Take notes for compliance and follow-up</li>
+                    </ul>
+
+                    <h3 style="margin-top: 20px; margin-bottom: 10px; color: #333;">Documentation</h3>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>Meetings are automatically recorded for compliance</li>
+                        <li>Ensure attendee list is complete and accurate</li>
+                        <li>Document action items and responsibility owners</li>
+                        <li>Send meeting minutes within 48 hours</li>
+                        <li>Maintain confidentiality of sensitive information</li>
+                    </ul>
+
+                    <h3 style="margin-top: 20px; margin-bottom: 10px; color: #333;">Technical Support</h3>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>If unable to connect, contact organizer immediately</li>
+                        <li>Refresh your browser if experiencing issues</li>
+                        <li>For recurring issues, clear browser cache</li>
+                        <li>Use alternative devices if primary device fails</li>
+                    </ul>
+
+                    <div style="background: #f0f4ff; border-left: 4px solid #667eea; padding: 15px; margin-top: 25px; border-radius: 4px;">
+                        <strong>📌 Compliance Note:</strong> All CAA meetings are logged for audit trail purposes. Meeting recordings and attendee lists are securely stored in accordance with professional standards.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Auditor Selection Functions
+        function selectAuditor(name, specialization, rating, cardElement) {
+            // Remove selection from all cards
+            document.querySelectorAll('.auditor-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked card
+            cardElement.classList.add('selected');
+            
+            // Update hidden inputs
+            document.getElementById('auditorName').value = name;
+            document.getElementById('auditorRating').value = rating;
+            document.getElementById('auditorDetails').value = specialization;
+            
+            // Show selection display
+            const display = document.getElementById('selectedAuditorDisplay');
+            const text = document.getElementById('selectedAuditorText');
+            text.textContent = `${name} - ${specialization}`;
+            display.style.display = 'block';
+        }
+
+        function clearAuditorSelection() {
+            // Remove selection from all cards
+            document.querySelectorAll('.auditor-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Clear hidden inputs
+            document.getElementById('auditorName').value = '';
+            document.getElementById('auditorRating').value = '';
+            document.getElementById('auditorDetails').value = '';
+            
+            // Hide selection display
+            document.getElementById('selectedAuditorDisplay').style.display = 'none';
+        }
+
+        // Schedule meeting
+        async function scheduleMeeting(event) {
+            event.preventDefault();
+
+            const meetingTitle = document.getElementById('meetingTitle').value.trim();
+            const meetingDate = document.getElementById('meetingDate').value;
+            const meetingTime = document.getElementById('meetingTime').value;
+            const duration = document.getElementById('duration').value;
+            const timezone = document.getElementById('timezone').value;
+            const organizerName = document.getElementById('organizerName').value.trim();
+            const organizerEmail = document.getElementById('organizerEmail').value.trim();
+            const attendees = document.getElementById('attendees').value.trim();
+            const agenda = document.getElementById('agenda').value.trim();
+            const meetingType = document.getElementById('meetingType').value;
+            const documentRef = document.getElementById('documentRef').value.trim();
+            const auditorName = document.getElementById('auditorName').value.trim();
+            const auditorDetails = document.getElementById('auditorDetails').value.trim();
+            const auditorRating = document.getElementById('auditorRating').value;
+
+            if (!meetingTitle || !meetingDate || !meetingTime) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            // Construct natural language input for Zoom scheduler
+            const startDateTime = `${meetingDate} ${meetingTime}`;
+            const naturalInput = `Schedule a CAA ${meetingType} meeting on ${meetingDate} at ${meetingTime} for ${duration} minutes`;
+
+            const button = event.target.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            button.innerHTML = '⏳ Scheduling<span class="loading"></span>';
+            button.disabled = true;
+
+            try {
+                // Save to CAA meetings database (backend handles Google Meet creation & email)
+                const saveResponse = await fetch('/api/finance/caa-meetings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        meeting_title: meetingTitle,
+                        meeting_date: meetingDate,
+                        meeting_time: meetingTime,
+                        duration: parseInt(duration),
+                        timezone: timezone,
+                        organizer_name: organizerName,
+                        organizer_email: organizerEmail,
+                        attendees: attendees,
+                        agenda: agenda,
+                        meeting_type: meetingType,
+                        document_ref: documentRef,
+                        auditor_name: auditorName,
+                        auditor_details: auditorDetails,
+                        auditor_rating: auditorRating,
+                        status: 'Scheduled'
+                    })
+                });
+
+                if (saveResponse.ok) {
+                    const saveData = await saveResponse.json();
+                    
+                    // Show success message with meeting link
+                    let successMsg = `✅ CAA Meeting Scheduled!\n\nTitle: ${meetingTitle}\nDate: ${meetingDate}\nTime: ${meetingTime}\n\n`;
+                    
+                    if (saveData.google_meet_link) {
+                        successMsg += `🔗 Meeting Link: ${saveData.google_meet_link}\n\n`;
+                    }
+                    
+                    successMsg += `📧 Email with meeting link sent to:\n${organizerEmail}`;
+                    
+                    if (attendees) {
+                        successMsg += `\n\nAttendees invited: ${attendees}`;
+                    }
+                    
+                    if (saveData.error) {
+                        successMsg += `\n\n⚠️ Note: ${saveData.error}`;
+                    }
+                    
+                    showSuccess(successMsg);
+                    document.getElementById('caaForm').reset();
+                    setTimeout(loadMeetings, 1500);
+                } else {
+                    const saveData = await saveResponse.json();
+                    showError(saveData.error || 'Failed to save meeting');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error scheduling meeting: ' + error.message);
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Load meetings
+        async function loadMeetings() {
+            const meetingsList = document.getElementById('meetingsList');
+            meetingsList.innerHTML = '<p style="text-align: center;">Loading meetings...</p>';
+
+            try {
+                const response = await fetch('/api/finance/caa-meetings');
+                const data = await response.json();
+
+                if (data.success && data.meetings.length > 0) {
+                    let filtered = data.meetings;
+                    if (currentFilter !== 'all') {
+                        filtered = filtered.filter(m => m.status === currentFilter);
+                    }
+
+                    if (filtered.length === 0) {
+                        meetingsList.innerHTML = `<div class="empty-state"><h3>No ${currentFilter} meetings</h3><p>Create your first CAA meeting to get started.</p></div>`;
+                        return;
+                    }
+
+                    let html = '';
+                    filtered.forEach(meeting => {
+                        const startTime = new Date(`${meeting.meeting_date}T${meeting.meeting_time}`).toLocaleString();
+                        const badgeClass = `badge-${meeting.status.toLowerCase()}`;
+                        const ratingStars = meeting.auditor_rating ? '⭐'.repeat(parseInt(meeting.auditor_rating)) : '';
+                        
+                        html += `
+                            <div class="meeting-card">
+                                <h3>
+                                    ${meeting.meeting_title}
+                                    <span class="badge ${badgeClass}">${meeting.status}</span>
+                                </h3>
+                                <div class="meeting-meta">
+                                    <div class="meta-item">
+                                        <span class="meta-icon">📅</span>
+                                        <span>${startTime}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-icon">⏱️</span>
+                                        <span>${meeting.duration} minutes</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-icon">🏢</span>
+                                        <span>${meeting.meeting_type}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-icon">👤</span>
+                                        <span>${meeting.organizer_name}</span>
+                                    </div>
+                                </div>
+                                ${meeting.auditor_name ? `
+                                    <div style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #667eea;">
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                            <span style="font-size: 1.5em;">🎓</span>
+                                            <strong style="color: #667eea; font-size: 1.1em;">${meeting.auditor_name}</strong>
+                                            ${ratingStars ? `<span style="font-size: 1.1em;">${ratingStars}</span>` : ''}
+                                        </div>
+                                        ${meeting.auditor_details ? `<p style="margin: 8px 0 0 0; color: #555; font-size: 0.95em; line-height: 1.5;"><strong>Details:</strong> ${meeting.auditor_details}</p>` : ''}
+                                    </div>
+                                ` : ''}
+                                ${meeting.agenda ? `<p><strong>Agenda:</strong> ${meeting.agenda}</p>` : ''}
+                                ${meeting.zoom_join_url ? `
+                                    <div class="meeting-link">
+                                        <strong>Meeting Link:</strong><br>
+                                        <a href="${meeting.zoom_join_url}" target="_blank" class="join-link">
+                                            ${meeting.zoom_join_url.includes('meet.google.com') ? '🎥 Join Google Meet' : '🔗 Join Meeting'}
+                                        </a>
+                                        <small style="display: block; margin-top: 5px; color: #666;">${meeting.zoom_join_url}</small>
+                                    </div>
+                                ` : ''}
+                                <div class="meeting-actions">
+                                    ${meeting.zoom_join_url ? `<button class="btn-secondary btn-small" onclick="copyLink('${meeting.zoom_join_url}')">📋 Copy Link</button>` : ''}
+                                    ${meeting.status === 'Scheduled' ? `<button class="btn-secondary btn-small" onclick="updateStatus(${meeting.id}, 'Completed')">✓ Mark Complete</button>` : ''}
+                                    <button class="btn-danger btn-small" onclick="deleteMeeting(${meeting.id})">🗑️ Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    meetingsList.innerHTML = html;
+                } else {
+                    meetingsList.innerHTML = '<div class="empty-state"><h3>No CAA Meetings</h3><p>Schedule your first CAA meeting to get started.</p></div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                meetingsList.innerHTML = '<p style="color: red;">Failed to load meetings</p>';
+            }
+        }
+
+        // Filter meetings
+        function filterMeetings(status) {
+            currentFilter = status;
+            document.querySelectorAll('.status-filter button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            loadMeetings();
+        }
+
+        // Copy link
+        function copyLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Meeting link copied to clipboard!');
+            });
+        }
+
+        // Update status
+        async function updateStatus(id, status) {
+            if (confirm(`Mark meeting as ${status}?`)) {
+                try {
+                    const response = await fetch(`/api/finance/caa-meetings/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status: status })
+                    });
+
+                    if (response.ok) {
+                        showSuccess(`Meeting marked as ${status}`);
+                        loadMeetings();
+                    } else {
+                        showError('Failed to update meeting');
+                    }
+                } catch (error) {
+                    showError('Network error: ' + error.message);
+                }
+            }
+        }
+
+        // Delete meeting
+        async function deleteMeeting(id) {
+            if (confirm('Are you sure you want to delete this meeting?')) {
+                try {
+                    const response = await fetch(`/api/finance/caa-meetings/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        showSuccess('Meeting deleted successfully');
+                        loadMeetings();
+                    } else {
+                        showError('Failed to delete meeting');
+                    }
+                } catch (error) {
+                    showError('Network error: ' + error.message);
+                }
+            }
+        }
+
+        // Alert helpers
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = message;
+            alert.classList.add('show');
+            document.getElementById('errorAlert').classList.remove('show');
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = message;
+            alert.classList.add('show');
+            document.getElementById('successAlert').classList.remove('show');
+            setTimeout(() => alert.classList.remove('show'), 5000);
+        }
+
+        // Set min date to today
+        window.addEventListener('load', () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('meetingDate').min = today;
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 text-gray-600 py-8 mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm font-medium">© 2026 TaxCalm - Business Intelligence Platform | All Rights Reserved</p>
+            <p class="text-xs mt-2 text-gray-500">Data updated in real-time | AI-powered insights | Secure & Confidential</p>
+        </div>
+    </footer>
+</body>
+</html>

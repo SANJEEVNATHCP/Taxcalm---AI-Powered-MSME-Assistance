@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaxCalm — Sign In & Sign Up | MSME Tax & Compliance Platform</title>
+    <meta name="description" content="Secure login and registration for TaxCalm, the premium MSME tax and compliance platform.">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        :root {
+            --primary: #4f6ef7;
+            --primary-hover: #3a56d4;
+            --primary-glow: rgba(79, 110, 247, 0.35);
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --bg: #070c18;
+            --bg2: #0d1424;
+            --card-bg: #111827;
+            --card-border: rgba(255, 255, 255, 0.07);
+            --input-bg: rgba(255, 255, 255, 0.04);
+            --input-bg-focus: rgba(79, 110, 247, 0.06);
+            --text-main: #f1f5f9;
+            --text-sub: #cbd5e1;
+            --text-muted: #64748b;
+            --border: rgba(255, 255, 255, 0.1);
+            --border-focus: rgba(79, 110, 247, 0.6);
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --error: #f87171;
+            --error-bg: rgba(248, 113, 113, 0.1);
+            --warning: #fbbf24;
+        }
+
+        /* ── Reset & Base ────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ── Animated Background ─────────────────────────────── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 10%, rgba(79,110,247,.18) 0%, transparent 60%),
+                radial-gradient(ellipse 70% 50% at 80% 80%, rgba(139,92,246,.15) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 60% 30%, rgba(6,182,212,.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+            animation: bgShift 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgShift {
+            0%   { opacity: 1; transform: scale(1); }
+            100% { opacity: .85; transform: scale(1.05); }
+        }
+
+        /* ── Floating orbs ───────────────────────────────────── */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: rgba(79,110,247,.12);
+            top: -120px; left: -100px;
+            animation: float1 14s ease-in-out infinite alternate;
+        }
+        .orb-2 {
+            width: 300px; height: 300px;
+            background: rgba(139,92,246,.1);
+            bottom: -80px; right: -60px;
+            animation: float2 18s ease-in-out infinite alternate;
+        }
+        .orb-3 {
+            width: 200px; height: 200px;
+            background: rgba(6,182,212,.08);
+            top: 50%; left: 60%;
+            animation: float3 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes float1  { 0%{transform:translate(0,0)} 100%{transform:translate(60px,40px)} }
+        @keyframes float2  { 0%{transform:translate(0,0)} 100%{transform:translate(-50px,-30px)} }
+        @keyframes float3  { 0%{transform:translate(0,0)} 100%{transform:translate(30px,-40px)} }
+
+        /* ── Scrollbar ───────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* ── Auth wrapper ────────────────────────────────────── */
+        .auth-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            padding: 20px 16px;
+        }
+
+        /* ── Logo area ───────────────────────────────────────── */
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 8px 32px var(--primary-glow);
+            font-size: 1.8rem;
+        }
+
+        .brand h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(120deg, #93c5fd 0%, #c4b5fd 50%, #67e8f9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .brand p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 0.3px;
+        }
+
+        /* ── Card ────────────────────────────────────────────── */
+        .auth-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 36px 40px 32px;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,.04),
+                0 32px 64px -16px rgba(0,0,0,.6),
+                0 0 80px -20px var(--primary-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--secondary), transparent);
+            opacity: 0.8;
+        }
+
+        /* ── Tabs ────────────────────────────────────────────── */
+        .tabs {
+            display: flex;
+            background: rgba(255,255,255,.04);
+            border: 1px solid var(--border);
+            padding: 4px;
+            border-radius: 14px;
+            margin-bottom: 28px;
+            gap: 4px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-muted);
+            user-select: none;
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--text-sub);
+            background: rgba(255,255,255,.04);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: 0 4px 16px var(--primary-glow);
+        }
+
+        /* ── Form panels ─────────────────────────────────────── */
+        .form-panel {
+            animation: panelIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes panelIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Form groups ─────────────────────────────────────── */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-sub);
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .form-group label .lbl-icon {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap input {
+            width: 100%;
+            padding: 12px 44px 12px 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color .25s, background .25s, box-shadow .25s;
+        }
+
+        .input-wrap input::placeholder {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+        }
+
+        .input-wrap input:focus {
+            border-color: var(--border-focus);
+            background: var(--input-bg-focus);
+            box-shadow: 0 0 0 3px rgba(79,110,247,.12);
+        }
+
+        .input-wrap input.valid {
+            border-color: var(--success);
+        }
+
+        .input-wrap input.invalid {
+            border-color: var(--error);
+        }
+
+        .input-status {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            pointer-events: none;
+            transition: opacity .2s;
+        }
+
+        .field-hint {
+            margin-top: 6px;
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .field-hint.error { color: var(--error); }
+        .field-hint.success { color: var(--success); }
+
+        /* ── GST / Aadhaar toggle selector ───────────────────── */
+        .gst-selector {
+            margin-bottom: 22px;
+        }
+
+        .gst-selector .selector-label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .radio-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .radio-card {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .radio-card input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0; height: 0;
+        }
+
+        .radio-card-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            background: var(--input-bg);
+            transition: all .25s cubic-bezier(0.4,0,0.2,1);
+            text-align: center;
+        }
+
+        .radio-card-body .rc-icon {
+            font-size: 1.6rem;
+            line-height: 1;
+        }
+
+        .radio-card-body .rc-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            line-height: 1.3;
+        }
+
+        .radio-card-body .rc-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .radio-card input:checked + .radio-card-body {
+            border-color: var(--primary);
+            background: rgba(79,110,247,.08);
+            box-shadow: 0 0 0 3px rgba(79,110,247,.12);
+        }
+
+        .radio-card input:checked + .radio-card-body .rc-title {
+            color: #93c5fd;
+        }
+
+        .radio-card:hover .radio-card-body {
+            border-color: rgba(79,110,247,.4);
+            background: rgba(255,255,255,.05);
+        }
+
+        /* ── Collapsible field sections ──────────────────────── */
+        .field-section {
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            transition: max-height .4s cubic-bezier(0.4,0,0.2,1),
+                        opacity .3s ease,
+                        margin .3s ease;
+            margin-bottom: 0;
+        }
+
+        .field-section.open {
+            max-height: 600px;
+            opacity: 1;
+            margin-bottom: 4px;
+        }
+
+        /* ── Fetched info card ───────────────────────────────── */
+        .info-card {
+            background: rgba(16,185,129,.07);
+            border: 1px solid rgba(16,185,129,.25);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 12px;
+            font-size: 0.83rem;
+            line-height: 1.7;
+            color: var(--text-sub);
+            display: none;
+            animation: panelIn .3s ease forwards;
+        }
+
+        .info-card.show { display: block; }
+
+        .info-card .ic-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .info-card .ic-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+        }
+
+        .info-card .ic-key  { color: var(--text-muted); }
+        .info-card .ic-val  { font-weight: 600; color: var(--text-sub); }
+
+        /* ── Fetch button ────────────────────────────────────── */
+        .btn-fetch {
+            width: 100%;
+            padding: 10px 16px;
+            background: rgba(79,110,247,.12);
+            border: 1px solid rgba(79,110,247,.35);
+            border-radius: 10px;
+            color: #93c5fd;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .25s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-fetch:hover {
+            background: rgba(79,110,247,.2);
+            border-color: rgba(79,110,247,.6);
+            transform: translateY(-1px);
+        }
+
+        .btn-fetch:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Divider ─────────────────────────────────────────── */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0 18px;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── Primary CTA button ──────────────────────────────── */
+        .btn-primary {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            transition: all .3s cubic-bezier(0.4,0,0.2,1);
+            position: relative;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,.1), transparent);
+            opacity: 0;
+            transition: opacity .3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px var(--primary-glow);
+        }
+
+        .btn-primary:hover::after { opacity: 1; }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-primary:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-primary .btn-spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Toast notification ──────────────────────────────── */
+        #toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 22px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 16px 40px rgba(0,0,0,.5);
+            z-index: 1000;
+            transition: transform .4s cubic-bezier(0.34,1.56,0.64,1), opacity .3s;
+            opacity: 0;
+            max-width: calc(100vw - 40px);
+            white-space: nowrap;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        #toast.success { border-color: rgba(16,185,129,.4); color: #6ee7b7; }
+        #toast.error   { border-color: rgba(248,113,113,.4); color: #fca5a5; }
+        #toast.info    { border-color: rgba(79,110,247,.4);  color: #93c5fd; }
+
+        /* ── Footer link ─────────────────────────────────────── */
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .auth-footer a {
+            color: #93c5fd;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-footer a:hover { text-decoration: underline; }
+
+        /* ── Utility ─────────────────────────────────────────── */
+        .hidden { display: none !important; }
+
+        .password-strength {
+            margin-top: 8px;
+            height: 3px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            border-radius: 3px;
+            width: 0;
+            transition: width .4s, background .4s;
+        }
+
+        @media (max-width: 520px) {
+            .auth-card { padding: 28px 20px 24px; border-radius: 20px; }
+            .brand h1 { font-size: 1.7rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="auth-wrapper">
+        <!-- Brand -->
+        <div class="brand">
+            <div class="brand-icon">🧾</div>
+            <h1>TaxCalm</h1>
+            <p>Secure MSME Tax &amp; Compliance Platform</p>
+        </div>
+
+        <!-- Card -->
+        <div class="auth-card">
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" id="tab-signin" onclick="switchTab('signin')">Sign In</div>
+                <div class="tab"        id="tab-signup" onclick="switchTab('signup')">Sign Up</div>
+            </div>
+
+            <!-- ══ SIGN IN PANEL ══════════════════════════════ -->
+            <div id="panel-signin" class="form-panel">
+                <form id="signin-form" novalidate>
+                    <div class="form-group">
+                        <label><span class="lbl-icon">👤</span> Username or Email</label>
+                        <div class="input-wrap">
+                            <input type="text" id="login-id" placeholder="Enter your username or email"
+                                   autocomplete="username" required>
+                            <span class="input-status" id="li-status"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="lbl-icon">🔒</span> Password</label>
+                        <div class="input-wrap">
+                            <input type="password" id="login-pass" placeholder="••••••••"
+                                   autocomplete="current-password" required>
+                            <span class="input-status" id="lp-status"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="signin-btn">Sign In</button>
+                </form>
+
+                <div class="auth-footer">
+                    Don't have an account?
+                    <a href="#" onclick="switchTab('signup')">Create one</a>
+                </div>
+            </div>
+
+            <!-- ══ SIGN UP PANEL ══════════════════════════════ -->
+            <div id="panel-signup" class="form-panel hidden">
+                <form id="signup-form" novalidate>
+                    <!-- Basic info -->
+                    <div class="form-group">
+                        <label><span class="lbl-icon">👤</span> Username</label>
+                        <div class="input-wrap">
+                            <input type="text" id="reg-user" placeholder="Choose a username"
+                                   autocomplete="username" required>
+                            <span class="input-status" id="ru-status"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="lbl-icon">✉️</span> Email Address</label>
+                        <div class="input-wrap">
+                            <input type="email" id="reg-email" placeholder="you@example.com"
+                                   autocomplete="email" required>
+                            <span class="input-status" id="re-status"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span class="lbl-icon">🔒</span> Password</label>
+                        <div class="input-wrap">
+                            <input type="password" id="reg-pass" placeholder="Min. 8 characters"
+                                   autocomplete="new-password" required>
+                            <span class="input-status" id="rp-status"></span>
+                        </div>
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="pw-bar"></div>
+                        </div>
+                        <div class="field-hint" id="pw-hint"></div>
+                    </div>
+
+                    <!-- GST Selector -->
+                    <div class="gst-selector">
+                        <span class="selector-label">🏢 Business Identification</span>
+                        <div class="radio-cards">
+                            <label class="radio-card">
+                                <input type="radio" name="has_gst" value="yes" id="gst-yes">
+                                <div class="radio-card-body">
+                                    <span class="rc-icon">🧾</span>
+                                    <span class="rc-title">I have a<br>GST Number</span>
+                                    <span class="rc-desc">Registered business</span>
+                                </div>
+                            </label>
+                            <label class="radio-card">
+                                <input type="radio" name="has_gst" value="no" id="gst-no" checked>
+                                <div class="radio-card-body">
+                                    <span class="rc-icon">🪪</span>
+                                    <span class="rc-title">No GST —<br>Aadhaar & PAN</span>
+                                    <span class="rc-desc">Individual / unregistered</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- ── GST Section ─────────────────────── -->
+                    <div class="field-section" id="gst-section">
+                        <div class="form-group">
+                            <label><span class="lbl-icon">🧾</span> GSTIN</label>
+                            <div class="input-wrap">
+                                <input type="text" id="reg-gstin" placeholder="22AAAAA0000A1Z5"
+                                       maxlength="15" style="text-transform:uppercase">
+                                <span class="input-status" id="gstin-status"></span>
+                            </div>
+                            <div class="field-hint" id="gstin-hint">
+                                Format: 2-digit state code + PAN + entity code (15 chars)
+                            </div>
+                        </div>
+                        <button type="button" class="btn-fetch" id="fetch-gst-btn">
+                            <span>🔍</span> Fetch Business Details
+                        </button>
+                        <div class="info-card" id="gst-info-card">
+                            <div class="ic-title">✅ Business Details Found</div>
+                            <div id="gst-info-content"></div>
+                        </div>
+                    </div>
+
+                    <!-- ── Aadhaar + PAN Section ───────────── -->
+                    <div class="field-section open" id="aadhar-pan-section">
+                        <div class="form-group">
+                            <label><span class="lbl-icon">🪪</span> Aadhaar Number</label>
+                            <div class="input-wrap">
+                                <input type="text" id="reg-aadhar" placeholder="1234 5678 9012"
+                                       maxlength="14">
+                                <span class="input-status" id="aadhar-status"></span>
+                            </div>
+                            <div class="field-hint" id="aadhar-hint">12-digit Aadhaar number</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><span class="lbl-icon">📋</span> PAN Number</label>
+                            <div class="input-wrap">
+                                <input type="text" id="reg-pan" placeholder="ABCDE1234F"
+                                       maxlength="10" style="text-transform:uppercase">
+                                <span class="input-status" id="pan-status"></span>
+                            </div>
+                            <div class="field-hint" id="pan-hint">10-character PAN (e.g. ABCDE1234F)</div>
+                        </div>
+
+                        <button type="button" class="btn-fetch" id="verify-identity-btn">
+                            <span>🔐</span> Verify Identity
+                        </button>
+                        <div class="info-card" id="identity-info-card">
+                            <div class="ic-title">✅ Identity Verified</div>
+                            <div id="identity-info-content"></div>
+                        </div>
+                    </div>
+
+                    <div class="divider">or continue</div>
+
+                    <button type="submit" class="btn-primary" id="signup-btn">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    Already have an account?
+                    <a href="#" onclick="switchTab('signin')">Sign in</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast"></div>
+
+    <!-- Auth JWT helper (global) -->
+    <script src="/static/js/auth.js"></script>
+    <!-- Auth page form logic -->
+    <script>
+        // Check if user is already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                // Redirect to main app if already logged in
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+
+</html>

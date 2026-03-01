@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Microphone Access</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        .step h2 {
+            color: #667eea;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .step ol, .step ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+        .step li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        .browser-tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .browser-tab {
+            padding: 10px 20px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .browser-tab:hover {
+            background: #667eea;
+            color: white;
+        }
+        .browser-tab.active {
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+        }
+        .browser-content {
+            display: none;
+        }
+        .browser-content.active {
+            display: block;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 5px solid #ffc107;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 5px solid #28a745;
+        }
+        .test-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .code {
+            background: #f4f4f4;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .image-placeholder {
+            background: #e9ecef;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #666;
+        }
+        #status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Fix Microphone Access</h1>
+        <p class="subtitle">Follow these steps to allow microphone access for the voice agent</p>
+
+        <div id="status" style="display: none;"></div>
+
+        <div class="step">
+            <h2>Step 1: Choose Your Browser</h2>
+            <div class="browser-tabs">
+                <button class="browser-tab active" onclick="showBrowser('chrome')">Chrome / Edge</button>
+                <button class="browser-tab" onclick="showBrowser('firefox')">Firefox</button>
+                <button class="browser-tab" onclick="showBrowser('safari')">Safari</button>
+            </div>
+        </div>
+
+        <!-- Chrome/Edge Instructions -->
+        <div id="chrome" class="browser-content active">
+            <div class="step">
+                <h2>For Chrome / Microsoft Edge:</h2>
+                <ol>
+                    <li>Look at the <strong>address bar</strong> (where the URL is)</li>
+                    <li>Click the <span class="code">🔒 lock icon</span> or <span class="code">ⓘ info icon</span> on the left side</li>
+                    <li>Find <strong>"Microphone"</strong> in the dropdown menu</li>
+                    <li>Change it from <strong>"Block"</strong> to <strong>"Allow"</strong></li>
+                    <li>Click <strong>"Reload"</strong> or press <span class="code">F5</span></li>
+                </ol>
+                
+                <div class="warning">
+                    <strong>⚠️ Alternative Method:</strong><br>
+                    1. Click the three dots (⋮) → Settings<br>
+                    2. Privacy and security → Site Settings<br>
+                    3. Microphone → Find <strong>localhost:8000</strong><br>
+                    4. Change permission to <strong>Allow</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Firefox Instructions -->
+        <div id="firefox" class="browser-content">
+            <div class="step">
+                <h2>For Firefox:</h2>
+                <ol>
+                    <li>Look at the <strong>address bar</strong></li>
+                    <li>Click the <span class="code">🛡️ shield icon</span> or <span class="code">ⓘ info icon</span></li>
+                    <li>Click <strong>"Permissions"</strong></li>
+                    <li>Find <strong>"Use the Microphone"</strong></li>
+                    <li>Uncheck <strong>"Block"</strong> or select <strong>"Allow"</strong></li>
+                    <li>Reload the page <span class="code">F5</span></li>
+                </ol>
+
+                <div class="warning">
+                    <strong>⚠️ Clear Blocked Permissions:</strong><br>
+                    1. Settings → Privacy & Security<br>
+                    2. Scroll to Permissions → Microphone → Settings<br>
+                    3. Remove <strong>localhost</strong> if blocked<br>
+                    4. Reload and allow when prompted
+                </div>
+            </div>
+        </div>
+
+        <!-- Safari Instructions -->
+        <div id="safari" class="browser-content">
+            <div class="step">
+                <h2>For Safari:</h2>
+                <ol>
+                    <li>Go to <strong>Safari</strong> menu → <strong>Settings (Preferences)</strong></li>
+                    <li>Click the <strong>"Websites"</strong> tab</li>
+                    <li>Select <strong>"Microphone"</strong> from the left sidebar</li>
+                    <li>Find <strong>localhost</strong> in the list</li>
+                    <li>Change permission to <strong>"Allow"</strong></li>
+                    <li>Close settings and reload the page</li>
+                </ol>
+
+                <div class="warning">
+                    <strong>⚠️ macOS System Permissions:</strong><br>
+                    1. Open System Preferences → Security & Privacy<br>
+                    2. Click "Microphone" tab<br>
+                    3. Make sure Safari is checked<br>
+                    4. Restart Safari if needed
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <h2>Step 2: Test Microphone Access</h2>
+            <p>Click the button below to test if your microphone is now working:</p>
+            <button class="test-button" onclick="testMicrophone()">🎤 Test Microphone Now</button>
+            <div id="testResult"></div>
+        </div>
+
+        <div class="step">
+            <h2>Step 3: Return to TaxCalm</h2>
+            <p>Once microphone access is granted:</p>
+            <ol>
+                <li>Go back to <a href="http://localhost:8000/" target="_blank" style="color: #667eea; font-weight: bold;">http://localhost:8000/</a></li>
+                <li>Click the <strong>🎤 microphone button</strong> in the chat header</li>
+                <li>Start speaking - you should see your words appear!</li>
+            </ol>
+        </div>
+
+        <div class="success">
+            <strong>✅ Pro Tips:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Use headphones to reduce echo and improve recognition</li>
+                <li>Speak clearly at a normal pace</li>
+                <li>Make sure you're in a quiet environment</li>
+                <li>If using Chrome, it works best with the voice agent</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>🔧 Still Not Working?</strong>
+            <ol style="margin: 10px 0; padding-left: 20px;">
+                <li>Try using <strong>Incognito/Private mode</strong> (permissions reset)</li>
+                <li>Check if other apps can access your microphone</li>
+                <li>Update your browser to the latest version</li>
+                <li>Try a different browser (Chrome recommended)</li>
+                <li>Restart your computer and try again</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function showBrowser(browser) {
+            // Hide all browser contents
+            document.querySelectorAll('.browser-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.browser-tab').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show selected browser content
+            document.getElementById(browser).classList.add('active');
+            
+            // Activate selected tab
+            event.target.classList.add('active');
+        }
+
+        async function testMicrophone() {
+            const statusDiv = document.getElementById('status');
+            const testResult = document.getElementById('testResult');
+            
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#fff3cd';
+            statusDiv.style.color = '#856404';
+            statusDiv.textContent = '⏳ Requesting microphone access...';
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Success!
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.innerHTML = '✅ <strong>SUCCESS!</strong> Microphone access granted!';
+                
+                testResult.innerHTML = `
+                    <div class="success" style="margin-top: 15px;">
+                        <strong>🎉 Great! Your microphone is working!</strong><br>
+                        <p style="margin: 10px 0;">You can now:</p>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li>Close this tab</li>
+                            <li>Go back to <a href="http://localhost:8000/" style="color: #28a745; font-weight: bold;">TaxCalm app</a></li>
+                            <li>Click the 🎤 button and start talking!</li>
+                        </ul>
+                    </div>
+                `;
+                
+                // Stop the microphone stream
+                stream.getTracks().forEach(track => track.stop());
+                
+            } catch (error) {
+                // Failed
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.innerHTML = '❌ <strong>Microphone Access Denied</strong>';
+                
+                let errorMessage = '';
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage = 'You clicked "Block" or permissions are blocked. Follow the steps above to allow access.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage = 'No microphone found. Please connect a microphone and try again.';
+                } else {
+                    errorMessage = 'Error: ' + error.message;
+                }
+                
+                testResult.innerHTML = `
+                    <div class="warning" style="margin-top: 15px;">
+                        <strong>⚠️ ${errorMessage}</strong><br><br>
+                        <strong>What to do:</strong><br>
+                        1. Follow the browser-specific instructions above<br>
+                        2. Look for the 🔒 or ⓘ icon in your address bar<br>
+                        3. Change Microphone permission to "Allow"<br>
+                        4. Reload this page and try again
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-detect browser
+        window.onload = function() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            let browser = 'chrome'; // default
+            
+            if (userAgent.includes('firefox')) {
+                browser = 'firefox';
+            } else if (userAgent.includes('safari') && !userAgent.includes('chrome')) {
+                browser = 'safari';
+            }
+            
+            // Show appropriate browser instructions
+            if (browser !== 'chrome') {
+                showBrowser(browser);
+                document.querySelector(`[onclick="showBrowser('${browser}')"]`).classList.add('active');
+            }
+        };
+    </script>
+</body>
+</html>

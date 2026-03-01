@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Meet Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #e0e0e0;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.success {
+            background: #4caf50;
+            color: white;
+            display: block;
+        }
+
+        .message.error {
+            background: #f44336;
+            color: white;
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .meeting-list {
+            margin-top: 40px;
+        }
+
+        .meeting-list h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .meeting-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .meeting-item strong {
+            color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .meeting-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .meeting-link:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="font-size: 3em; margin-bottom: 10px;">🎥</div>
+            <h1>Google Meet Scheduler</h1>
+            <p>Schedule meetings with Google Meet integration</p>
+        </div>
+
+        <div class="card">
+            <div id="message" class="message"></div>
+
+            <form id="meetingForm">
+                <div class="form-group">
+                    <label for="title">Meeting Title *</label>
+                    <input type="text" id="title" name="title" required placeholder="e.g., Project Discussion">
+                </div>
+
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="date">Date *</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="time">Time *</label>
+                        <input type="time" id="time" name="time" required>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="duration">Duration (minutes) *</label>
+                        <input type="number" id="duration" name="duration" value="60" min="15" max="480" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="organizer">Organizer Name *</label>
+                        <input type="text" id="organizer" name="organizer" required placeholder="Your name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="organizer_email">Organizer Email *</label>
+                    <input type="email" id="organizer_email" name="organizer_email" required placeholder="your.email@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="attendees">Attendees Email (comma-separated)</label>
+                    <input type="text" id="attendees" name="attendees" placeholder="email1@example.com, email2@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" placeholder="Meeting agenda or description..."></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn-submit">📅 Schedule Meeting</button>
+                    <button type="reset" class="btn-reset">Clear</button>
+                </div>
+            </form>
+
+            <div class="meeting-list">
+                <h2>📋 Scheduled Meetings</h2>
+                <div id="meetingsList" style="max-height: 400px; overflow-y: auto;">
+                    <div class="loading">Loading meetings...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set minimum date to today
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+
+        // Load meetings on page load
+        window.addEventListener('load', loadMeetings);
+
+        // Handle form submission
+        document.getElementById('meetingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                meeting_title: document.getElementById('title').value,
+                meeting_date: document.getElementById('date').value,
+                meeting_time: document.getElementById('time').value,
+                duration: parseInt(document.getElementById('duration').value),
+                organizer_name: document.getElementById('organizer').value,
+                organizer_email: document.getElementById('organizer_email').value,
+                attendees: document.getElementById('attendees').value,
+                description: document.getElementById('description').value
+            };
+
+            try {
+                const response = await fetch('/api/finance/google-meets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('✅ Meeting scheduled successfully!', 'success');
+                    document.getElementById('meetingForm').reset();
+                    loadMeetings();
+                } else {
+                    showMessage('❌ Error: ' + (result.error || 'Failed to schedule meeting'), 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Error: ' + error.message, 'error');
+                console.error('Error:', error);
+            }
+        });
+
+        // Load meetings list
+        async function loadMeetings() {
+            try {
+                const response = await fetch('/api/finance/google-meets');
+                const result = await response.json();
+
+                const meetingsList = document.getElementById('meetingsList');
+                
+                if (result.success && result.meetings && result.meetings.length > 0) {
+                    meetingsList.innerHTML = result.meetings.map(meeting => `
+                        <div class="meeting-item">
+                            <strong>${meeting.meeting_title}</strong>
+                            <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                                📅 ${meeting.meeting_date} at ${meeting.meeting_time}
+                                <br>
+                                👤 ${meeting.organizer_name} (${meeting.organizer_email})
+                                <br>
+                                ⏱️ ${meeting.duration} minutes
+                                ${meeting.google_meet_link ? `<br><a href="${meeting.google_meet_link}" target="_blank" class="meeting-link">🎥 Join Meeting</a>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    meetingsList.innerHTML = '<p style="color: #999; text-align: center;">No meetings scheduled yet</p>';
+                }
+            } catch (error) {
+                console.error('Error loading meetings:', error);
+            }
+        }
+
+        // Show message
+        function showMessage(text, type) {
+            const msgDiv = document.getElementById('message');
+            msgDiv.textContent = text;
+            msgDiv.className = `message ${type}`;
+            
+            setTimeout(() => {
+                msgDiv.className = 'message';
+            }, 5000);
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 text-gray-600 py-8 mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm font-medium">© 2026 TaxCalm - Business Intelligence Platform | All Rights Reserved</p>
+            <p class="text-xs mt-2 text-gray-500">Data updated in real-time | AI-powered insights | Secure & Confidential</p>
+        </div>
+    </footer>
+</body>
+</html>

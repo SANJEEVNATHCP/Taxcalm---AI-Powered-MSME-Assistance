@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMD GPU Acceleration Demo - TaxCalm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.min.js"></script>
+    <script src="/static/js/gpu-accelerator.js"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 mb-8">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">🚀 GPU Acceleration Demo</h1>
+                    <p class="text-gray-600">Hardware-accelerated calculations for AMD, NVIDIA & Intel GPUs</p>
+                </div>
+                <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                    ← Back to App
+                </a>
+            </div>
+
+            <!-- GPU Info Card -->
+            <div id="gpuInfo" class="bg-gradient-to-r from-red-500 to-orange-500 text-white p-6 rounded-xl mb-6">
+                <h2 class="text-2xl font-bold mb-4">🎮 Your GPU Information</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-red-100 text-sm">GPU Vendor</p>
+                        <p id="gpuVendor" class="text-xl font-bold">Detecting...</p>
+                    </div>
+                    <div>
+                        <p class="text-red-100 text-sm">GPU Renderer</p>
+                        <p id="gpuRenderer" class="text-xl font-bold">Detecting...</p>
+                    </div>
+                    <div>
+                        <p class="text-red-100 text-sm">Acceleration Status</p>
+                        <p id="gpuStatus" class="text-xl font-bold">Detecting...</p>
+                    </div>
+                    <div>
+                        <p class="text-red-100 text-sm">Backend</p>
+                        <p id="gpuBackend" class="text-xl font-bold">Detecting...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Test -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">⚡ Performance Benchmark</h2>
+            <p class="text-gray-600 mb-6">Compare CPU vs GPU performance for batch GST calculations</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">Number of Calculations:</label>
+                    <input type="number" id="calcCount" value="10000" min="100" max="1000000" 
+                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none">
+                </div>
+
+                <button onclick="runBenchmark()" 
+                        class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-purple-700 transition">
+                    Run Benchmark Test
+                </button>
+
+                <div id="benchmarkResults" class="hidden mt-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-red-100 p-6 rounded-xl">
+                            <p class="text-red-800 font-semibold mb-2">CPU Time</p>
+                            <p id="cpuTime" class="text-3xl font-bold text-red-600">-</p>
+                        </div>
+                        <div class="bg-green-100 p-6 rounded-xl">
+                            <p class="text-green-800 font-semibold mb-2">GPU Time</p>
+                            <p id="gpuTime" class="text-3xl font-bold text-green-600">-</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 bg-yellow-100 p-6 rounded-xl text-center">
+                        <p class="text-yellow-800 font-semibold mb-2">Performance Improvement</p>
+                        <p id="speedup" class="text-4xl font-bold text-yellow-600">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AMD GPU Benefits -->
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-2xl shadow-2xl p-8">
+            <h2 class="text-3xl font-bold mb-6">🎯 AMD Radeon Graphics Benefits</h2>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white bg-opacity-20 p-6 rounded-xl">
+                    <div class="text-4xl mb-3">⚡</div>
+                    <h3 class="text-xl font-bold mb-2">Hardware Acceleration</h3>
+                    <p class="text-red-100">AMD Radeon GPUs accelerate complex calculations using WebGL and GPU.js</p>
+                </div>
+                <div class="bg-white bg-opacity-20 p-6 rounded-xl">
+                    <div class="text-4xl mb-3">🚀</div>
+                    <h3 class="text-xl font-bold mb-2">Parallel Processing</h3>
+                    <p class="text-red-100">Process thousands of GST calculations simultaneously</p>
+                </div>
+                <div class="bg-white bg-opacity-20 p-6 rounded-xl">
+                    <div class="text-4xl mb-3">💰</div>
+                    <h3 class="text-xl font-bold mb-2">Energy Efficient</h3>
+                    <p class="text-red-100">AMD's RDNA architecture provides excellent performance per watt</p>
+                </div>
+                <div class="bg-white bg-opacity-20 p-6 rounded-xl">
+                    <div class="text-4xl mb-3">🔧</div>
+                    <h3 class="text-xl font-bold mb-2">Universal Support</h3>
+                    <p class="text-red-100">Works across AMD Ryzen integrated graphics and Radeon discrete GPUs</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Display GPU information
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const gpuInfo = window.gpuAccelerator.getInfo();
+                
+                document.getElementById('gpuVendor').textContent = gpuInfo.vendor;
+                document.getElementById('gpuRenderer').textContent = gpuInfo.renderer;
+                document.getElementById('gpuStatus').textContent = gpuInfo.available ? '✅ Available' : '❌ Not Available';
+                document.getElementById('gpuBackend').textContent = gpuInfo.backend;
+
+                // Change card color based on GPU vendor
+                const gpuInfoCard = document.getElementById('gpuInfo');
+                if (gpuInfo.isAMD) {
+                    gpuInfoCard.className = 'bg-gradient-to-r from-red-500 to-orange-500 text-white p-6 rounded-xl mb-6';
+                } else if (gpuInfo.isNVIDIA) {
+                    gpuInfoCard.className = 'bg-gradient-to-r from-green-500 to-emerald-500 text-white p-6 rounded-xl mb-6';
+                } else if (gpuInfo.isIntel) {
+                    gpuInfoCard.className = 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-6 rounded-xl mb-6';
+                }
+            }, 500);
+        });
+
+        // Benchmark function
+        function runBenchmark() {
+            const count = parseInt(document.getElementById('calcCount').value);
+            
+            // Generate random test data
+            const salesPrices = Array.from({length: count}, () => Math.random() * 100000);
+            const gstRates = Array.from({length: count}, () => [5, 12, 18, 28][Math.floor(Math.random() * 4)]);
+
+            // CPU Benchmark
+            const cpuStart = performance.now();
+            const cpuResults = salesPrices.map((price, i) => price * (gstRates[i] / 100));
+            const cpuEnd = performance.now();
+            const cpuTime = (cpuEnd - cpuStart).toFixed(2);
+
+            // GPU Benchmark
+            const gpuStart = performance.now();
+            const gpuResults = window.gpuAccelerator.batchGSTCalculation(salesPrices, gstRates);
+            const gpuEnd = performance.now();
+            const gpuTime = (gpuEnd - gpuStart).toFixed(2);
+
+            // Calculate speedup
+            const speedup = (cpuTime / gpuTime).toFixed(2);
+
+            // Display results
+            document.getElementById('cpuTime').textContent = cpuTime + ' ms';
+            document.getElementById('gpuTime').textContent = gpuTime + ' ms';
+            document.getElementById('speedup').textContent = speedup + 'x faster';
+            document.getElementById('benchmarkResults').classList.remove('hidden');
+
+            console.log('Benchmark Results:');
+            console.log(`CPU Time: ${cpuTime} ms`);
+            console.log(`GPU Time: ${gpuTime} ms`);
+            console.log(`Speedup: ${speedup}x`);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,568 @@
+<!-- Zoom Meeting Scheduler UI -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoom Meeting Scheduler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            font-size: 1em;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .meeting-link {
+            word-break: break-all;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .meetings-list {
+            margin-top: 30px;
+        }
+
+        .meeting-card {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+        }
+
+        .meeting-card h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .meeting-meta {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .meeting-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.85em;
+            flex: 1;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .example {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+
+        .example strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Zoom Meeting Scheduler</h1>
+            <p>Schedule meetings with AI-powered natural language</p>
+        </div>
+
+        <div class="card">
+            <div class="alert alert-info" id="infoAlert" style="display: block;">
+                📌 Just describe your meeting in natural language and let AI schedule it for you!
+            </div>
+
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('schedule')">Schedule Meeting</button>
+                <button class="tab-button" onclick="switchTab('my-meetings')">My Meetings</button>
+                <button class="tab-button" onclick="switchTab('examples')">Examples</button>
+            </div>
+
+            <!-- Schedule Tab -->
+            <div id="schedule" class="tab-content active">
+                <form id="meetingForm" onsubmit="scheduleMeeting(event)">
+                    <div class="form-group">
+                        <label for="input">📝 Meeting Description</label>
+                        <textarea id="input" placeholder="e.g., 'Schedule a team standup tomorrow at 10 AM for 30 minutes'" required></textarea>
+                        <small style="color: #666; margin-top: 5px; display: block;">
+                            Use natural language like: "Meeting tomorrow at 3 PM", "Standup next Monday at 10 AM for 1 hour"
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="hostName">👤 Host Name (Optional)</label>
+                        <input type="text" id="hostName" placeholder="Your name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timezone">🌍 Timezone</label>
+                        <select id="timezone">
+                            <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                            <option value="Asia/Calcutta">Asia/Calcutta (IST)</option>
+                            <option value="Asia/Bangkok">Asia/Bangkok (Thailand)</option>
+                            <option value="Asia/Singapore">Asia/Singapore</option>
+                            <option value="Asia/Hong_Kong">Asia/Hong Kong</option>
+                            <option value="Asia/Tokyo">Asia/Tokyo (Japan)</option>
+                            <option value="Asia/Shanghai">Asia/Shanghai (China)</option>
+                            <option value="Australia/Sydney">Australia/Sydney</option>
+                            <option value="Europe/London">Europe/London (GMT)</option>
+                            <option value="Europe/Paris">Europe/Paris (CET)</option>
+                            <option value="America/New_York">America/New York (EST)</option>
+                            <option value="America/Chicago">America/Chicago (CST)</option>
+                            <option value="America/Los_Angeles">America/Los Angeles (PST)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">📋 Meeting Agenda (Optional)</label>
+                        <textarea id="description" placeholder="Add meeting details or agenda..."></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">
+                            📅 Schedule Meeting
+                        </button>
+                        <button type="reset" class="btn-secondary">Clear Form</button>
+                    </div>
+                </form>
+
+                <div id="successAlert" class="alert alert-success"></div>
+                <div id="errorAlert" class="alert alert-error"></div>
+            </div>
+
+            <!-- My Meetings Tab -->
+            <div id="my-meetings" class="tab-content">
+                <button class="btn-primary" style="width: 100%; margin-bottom: 20px;" onclick="loadMeetings()">
+                    🔄 Refresh Meetings
+                </button>
+                <div id="meetingsList" class="meetings-list"></div>
+            </div>
+
+            <!-- Examples Tab -->
+            <div id="examples" class="tab-content">
+                <h3 style="margin-bottom: 15px;">📚 Example Inputs</h3>
+                
+                <div class="example">
+                    <strong>Simple meeting:</strong><br>
+                    "Schedule a meeting tomorrow at 3 PM for 1 hour"
+                </div>
+
+                <div class="example">
+                    <strong>With topic:</strong><br>
+                    "Create a team standup tomorrow at 10 AM for 30 minutes"
+                </div>
+
+                <div class="example">
+                    <strong>Specific day:</strong><br>
+                    "Schedule a project review meeting next Friday at 2:30 PM for 2 hours"
+                </div>
+
+                <div class="example">
+                    <strong>Today's meeting:</strong><br>
+                    "Book a meeting today at 4 PM for 45 minutes"
+                </div>
+
+                <div class="example">
+                    <strong>With custom title:</strong><br>
+                    "Meeting called 'Budget Discussion' tomorrow at 11 AM for 1 hour"
+                </div>
+
+                <h3 style="margin-top: 25px; margin-bottom: 15px;">💡 Tips</h3>
+                <ul style="margin-left: 20px;">
+                    <li>Always mention the time (hour and optional minutes)</li>
+                    <li>Specify when (tomorrow, today, next Monday, Friday, etc.)</li>
+                    <li>Duration defaults to 1 hour if not specified</li>
+                    <li>You can use 12-hour (3 PM) or 24-hour format (15:00)</li>
+                    <li>Add "for X hours/minutes" to set duration</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const meetingForm = document.getElementById('meetingForm');
+        const successAlert = document.getElementById('successAlert');
+        const errorAlert = document.getElementById('errorAlert');
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Highlight active button
+            event.target.classList.add('active');
+        }
+
+        // Schedule meeting from form
+        async function scheduleMeeting(event) {
+            event.preventDefault();
+
+            const input = document.getElementById('input').value.trim();
+            const hostName = document.getElementById('hostName').value.trim();
+            const timezone = document.getElementById('timezone').value;
+            const description = document.getElementById('description').value.trim();
+
+            if (!input) {
+                showError('Please enter meeting details');
+                return;
+            }
+
+            const button = event.target.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            button.innerHTML = '⏳ Scheduling<span class="loading"></span>';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/api/zoom/schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        input: input,
+                        timezone: timezone,
+                        host_name: hostName,
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(`✅ Meeting Scheduled!\n\n${data.message}`);
+                    
+                    // Display join link
+                    const joinLink = document.createElement('div');
+                    joinLink.className = 'meeting-link';
+                    joinLink.innerHTML = `<strong>Join Link:</strong><br><a href="${data.meeting.join_url}" target="_blank">${data.meeting.join_url}</a>`;
+                    successAlert.appendChild(joinLink);
+
+                    meetingForm.reset();
+                    
+                    // Load updated meetings list
+                    setTimeout(loadMeetings, 1000);
+                } else {
+                    showError(data.error || 'Failed to schedule meeting');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Network error: ' + error.message);
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Load user's meetings
+        async function loadMeetings() {
+            const meetingsList = document.getElementById('meetingsList');
+            meetingsList.innerHTML = '<p>Loading meetings...</p>';
+
+            try {
+                const response = await fetch('/api/zoom/meetings');
+                const data = await response.json();
+
+                if (data.success && data.meetings.length > 0) {
+                    let html = '';
+                    data.meetings.forEach(meeting => {
+                        const startTime = new Date(meeting.start_time).toLocaleString();
+                        html += `
+                            <div class="meeting-card">
+                                <h3>${meeting.topic}</h3>
+                                <div class="meeting-meta">
+                                    <p>📅 <strong>Start:</strong> ${startTime}</p>
+                                    <p>⏱️ <strong>Duration:</strong> ${meeting.duration} minutes</p>
+                                    <p>🌍 <strong>Timezone:</strong> ${meeting.timezone}</p>
+                                    <p>📊 <strong>Status:</strong> <span style="color: #28a745;">${meeting.status}</span></p>
+                                </div>
+                                <p>🔗 <a href="${meeting.join_url}" target="_blank">Join Meeting</a></p>
+                                <div class="meeting-actions">
+                                    <button class="btn-small btn-secondary" onclick="copyLink('${meeting.join_url}')">Copy Link</button>
+                                    <button class="btn-small btn-secondary" onclick="deleteMeeting(${meeting.id})">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    meetingsList.innerHTML = html;
+                } else {
+                    meetingsList.innerHTML = '<p style="text-align: center; color: #666;">No meetings scheduled yet. Create one above!</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                meetingsList.innerHTML = '<p style="color: red;">Failed to load meetings</p>';
+            }
+        }
+
+        // Copy meeting link
+        function copyLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Meeting link copied to clipboard!');
+            });
+        }
+
+        // Delete meeting
+        async function deleteMeeting(recordId) {
+            if (!confirm('Are you sure you want to delete this meeting?')) return;
+
+            try {
+                const response = await fetch(`/api/zoom/meeting/${recordId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('Meeting deleted successfully');
+                    loadMeetings();
+                } else {
+                    showError('Failed to delete meeting');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        // Alert helpers
+        function showSuccess(message) {
+            successAlert.textContent = message;
+            successAlert.classList.add('show');
+            errorAlert.classList.remove('show');
+            setTimeout(() => successAlert.classList.remove('show'), 5000);
+        }
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.add('show');
+            successAlert.classList.remove('show');
+            setTimeout(() => errorAlert.classList.remove('show'), 5000);
+        }
+
+        // Load meetings on page load
+        window.addEventListener('load', () => {
+            // loadMeetings(); // Uncomment to auto-load on startup
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 text-gray-600 py-8 mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm font-medium">© 2026 TaxCalm - Business Intelligence Platform | All Rights Reserved</p>
+            <p class="text-xs mt-2 text-gray-500">Data updated in real-time | AI-powered insights | Secure & Confidential</p>
+        </div>
+    </footer>
+</body>
+</html>

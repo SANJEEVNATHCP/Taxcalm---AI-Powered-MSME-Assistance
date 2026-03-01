@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="TaxCalm - Secure MSME Tax & Compliance Platform">
+    <meta name="theme-color" content="#667eea">
+    <title>Login - TaxCalm | Secure MSME Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .tab-button {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .password-strength.weak { background-color: #ef4444; }
+        .password-strength.medium { background-color: #f59e0b; }
+        .password-strength.strong { background-color: #10b981; }
+        
+        .input-error {
+            border-color: #ef4444 !important;
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+        
+        .input-error:focus {
+            ring-color: #ef4444 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="w-full max-w-md px-4">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8 fade-in">
+            <div class="bg-white rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center shadow-lg">
+                <span class="text-4xl">🔐</span>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">TaxCalm</h1>
+            <p class="text-purple-100">Secure MSME Tax & Compliance Platform</p>
+        </div>
+        
+        <!-- Auth Card -->
+        <div class="glass-card rounded-2xl p-8 shadow-2xl fade-in">
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200 mb-6">
+                <button id="loginTab" class="tab-button active flex-1 pb-3 text-gray-700 font-semibold" onclick="switchTab('login')">
+                    Login
+                </button>
+                <button id="registerTab" class="tab-button flex-1 pb-3 text-gray-500 font-semibold" onclick="switchTab('register')">
+                    Register
+                </button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4" style="display: block;">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="loginEmail" required
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <input type="password" id="loginPassword" required aria-label="Password"
+                            class="input-field w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <button type="button" aria-label="Toggle password visibility" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700" onclick="togglePasswordVisibility('loginPassword')">
+                            <span id="loginPasswordIcon">👁️</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-2 rounded">
+                        <span class="text-gray-600">Remember me</span>
+                    </label>
+                    <button type="button" onclick="showForgotPassword()" class="text-purple-600 hover:text-purple-800 font-medium">
+                        Forgot password?
+                    </button>
+                </div>
+                
+                <button type="submit" class="btn-primary w-full py-3 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="loginSubmitBtn">
+                    <span id="loginBtnText">🔓 Login</span>
+                    <span id="loginBtnSpinner" class="loading-spinner hidden ml-2"></span>
+                </button>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="registerForm" class="space-y-4" style="display: none;">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="registerUsername" required
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="johndoe123">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="registerEmail" required
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="john@company.com">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <input type="password" id="registerPassword" required aria-label="Password"
+                            class="input-field w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="Min. 8 characters, 1 uppercase, 1 number"
+                            oninput="checkPasswordStrength(this.value)">
+                        <button type="button" aria-label="Toggle password visibility" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700" onclick="togglePasswordVisibility('registerPassword')">
+                            <span id="registerPasswordIcon">👁️</span>
+                        </button>
+                    </div>
+                    <div id="passwordStrengthMeter" class="password-strength mt-2 hidden"></div>
+                    <p id="passwordStrengthText" class="text-xs text-gray-500 mt-1">Must contain uppercase, lowercase, and number</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <div class="relative">
+                        <input type="password" id="registerConfirmPassword" required aria-label="Confirm Password"
+                            class="input-field w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            oninput="validatePasswordMatch()">
+                        <button type="button" aria-label="Toggle password visibility" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700" onclick="togglePasswordVisibility('registerConfirmPassword')">
+                            <span id="registerConfirmPasswordIcon">👁️</span>
+                        </button>
+                    </div>
+                    <p id="passwordMatchText" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+                
+                <button type="submit" class="btn-primary w-full py-3 text-white font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed" id="registerSubmitBtn">
+                    <span id="registerBtnText">✨ Create Account</span>
+                    <span id="registerBtnSpinner" class="loading-spinner hidden ml-2"></span>
+                </button>
+            </form>
+            
+            <!-- Forgot Password Form -->
+            <form id="forgotPasswordForm" class="space-y-4" style="display: none;">
+                <p class="text-sm text-gray-600 mb-4">Enter your email address and we'll send you a password reset link.</p>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" id="forgotEmail" required
+                        class="input-field w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                
+                <button type="submit" class="btn-primary w-full py-3 text-white font-semibold rounded-lg">
+                    📧 Send Reset Link
+                </button>
+                
+                <button type="button" onclick="switchTab('login')" class="w-full py-2 text-purple-600 hover:text-purple-800 font-medium">
+                    ← Back to Login
+                </button>
+            </form>
+            
+            <!-- Notification Area -->
+            <div id="notification" class="mt-4 hidden"></div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-6 text-purple-100 text-sm">
+            <p>🔒 Your data is encrypted and secure</p>
+            <p class="mt-2">© 2026 TaxCalm - All rights reserved</p>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8001/api';
+        let formSubmitting = false;
+        
+        // Password visibility toggle
+        function togglePasswordVisibility(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.getElementById(fieldId + 'Icon');
+            const isPassword = field.type === 'password';
+            field.type = isPassword ? 'text' : 'password';
+            icon.textContent = isPassword ? '🙈' : '👁️';
+        }
+        
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            const meter = document.getElementById('passwordStrengthMeter');
+            const text = document.getElementById('passwordStrengthText');
+            
+            meter.classList.remove('hidden');
+            
+            let strength = 'weak';
+            let requirements = [];
+            
+            if (password.length >= 8) requirements.push('✓ Length');
+            if (/[A-Z]/.test(password)) requirements.push('✓ Uppercase');
+            if (/[a-z]/.test(password)) requirements.push('✓ Lowercase');
+            if (/[0-9]/.test(password)) requirements.push('✓ Number');
+            if (/[!@#$%^&*]/.test(password)) requirements.push('✓ Special char');
+            
+            if (requirements.length >= 4) strength = 'strong';
+            else if (requirements.length >= 3) strength = 'medium';
+            
+            meter.className = `password-strength ${strength}`;
+            text.textContent = requirements.join(' | ') || 'Password requirements';
+        }
+        
+        // Validate password match
+        function validatePasswordMatch() {
+            const password = document.getElementById('registerPassword').value;
+            const confirm = document.getElementById('registerConfirmPassword').value;
+            const text = document.getElementById('passwordMatchText');
+            
+            if (confirm === '') {
+                text.textContent = '';
+            } else if (password === confirm) {
+                text.textContent = '✓ Passwords match';
+                text.className = 'text-xs text-green-600 mt-1';
+            } else {
+                text.textContent = '✗ Passwords do not match';
+                text.className = 'text-xs text-red-600 mt-1';
+            }
+        }
+        
+        // Prevent multiple submissions
+        function disableFormSubmit(btnId, spinnerId, btnTextId) {
+            const btn = document.getElementById(btnId);
+            const spinner = document.getElementById(spinnerId);
+            const text = document.getElementById(btnTextId);
+            
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            formSubmitting = true;
+            
+            return { btn, spinner, text };
+        }
+        
+        function enableFormSubmit(btnId, spinnerId, btnTextId) {
+            const btn = document.getElementById(btnId);
+            const spinner = document.getElementById(spinnerId);
+            const text = document.getElementById(btnTextId);
+            
+            btn.disabled = false;
+            spinner.classList.add('hidden');
+            formSubmitting = false;
+        }
+        
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            
+            // Hide all forms
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'none';
+            
+            if (tab === 'login') {
+                document.getElementById('loginTab').classList.add('active');
+                document.getElementById('loginForm').style.display = 'block';
+            } else if (tab === 'register') {
+                document.getElementById('registerTab').classList.add('active');
+                document.getElementById('registerForm').style.display = 'block';
+            }
+        }
+        
+        function showForgotPassword() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('forgotPasswordForm').style.display = 'block';
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const colors = {
+                success: 'bg-green-50 border-green-200 text-green-800',
+                error: 'bg-red-50 border-red-200 text-red-800',
+                info: 'bg-blue-50 border-blue-200 text-blue-800'
+            };
+            
+            notification.className = `mt-4 p-4 rounded-lg border ${colors[type]}`;
+            notification.textContent = message;
+            notification.classList.remove('hidden');
+            
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 5000);
+        }
+        
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (formSubmitting) return;
+            
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            // Validate inputs
+            if (!email || !password) {
+                showNotification('Please enter both email and password', 'error');
+                return;
+            }
+            
+            disableFormSubmit('loginSubmitBtn', 'loginBtnSpinner', 'loginBtnText');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Store token securely
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    showNotification('✅ Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    showNotification(data.detail || 'Login failed. Please check your credentials.', 'error');
+                    enableFormSubmit('loginSubmitBtn', 'loginBtnSpinner', 'loginBtnText');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification('Network error. Please try again.', 'error');
+                enableFormSubmit('loginSubmitBtn', 'loginBtnSpinner', 'loginBtnText');
+            }
+        });
+        
+        // Register Form Handler
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (formSubmitting) return;
+            
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirm_password = document.getElementById('registerConfirmPassword').value;
+            
+            // Validate inputs
+            if (!username || !email || !password || !confirm_password) {
+                showNotification('Please fill all fields', 'error');
+                return;
+            }
+            
+            if (password !== confirm_password) {
+                showNotification('Passwords do not match', 'error');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9_-]{3,50}$/.test(username)) {
+                showNotification('Username must be 3-50 characters (alphanumeric, hyphen, underscore)', 'error');
+                return;
+            }
+            
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showNotification('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            disableFormSubmit('registerSubmitBtn', 'registerBtnSpinner', 'registerBtnText');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, confirm_password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showNotification('✅ Account created successfully! Please login.', 'success');
+                    setTimeout(() => {
+                        switchTab('login');
+                        document.getElementById('loginEmail').value = email;
+                        document.getElementById('registerForm').reset();
+                    }, 2000);
+                } else {
+                    showNotification(data.detail || 'Registration failed. Please try again.', 'error');
+                    enableFormSubmit('registerSubmitBtn', 'registerBtnSpinner', 'registerBtnText');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showNotification('Network error. Please try again.', 'error');
+                enableFormSubmit('registerSubmitBtn', 'registerBtnSpinner', 'registerBtnText');
+            }
+        });
+        
+        // Forgot Password Form Handler
+        document.getElementById('forgotPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (formSubmitting) return;
+            
+            const email = document.getElementById('forgotEmail').value.trim();
+            
+            if (!email) {
+                showNotification('Please enter your email address', 'error');
+                return;
+            }
+            
+            disableFormSubmit('forgotPasswordForm', 'forgotPasswordForm', 'forgotPasswordForm');
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showNotification('✅ Password reset link sent! Check your email.', 'success');
+                    setTimeout(() => {
+                        switchTab('login');
+                        document.getElementById('forgotPasswordForm').reset();
+                    }, 2000);
+                } else {
+                    showNotification(data.detail || 'Request failed. Please try again.', 'error');
+                    enableFormSubmit('forgotPasswordForm', 'forgotPasswordForm', 'forgotPasswordForm');
+                }
+            } catch (error) {
+                console.error('Forgot password error:', error);
+                showNotification('Network error. Please try again.', 'error');
+                enableFormSubmit('forgotPasswordForm', 'forgotPasswordForm', 'forgotPasswordForm');
+            }
+        });
+        
+        // Check if already logged in
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                // Verify token is still valid
+                fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    credentials: 'include'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/';
+                    } else {
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('user');
+                    }
+                })
+                .catch(err => {
+                    console.error('Session validation error:', err);
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('user');
+                });
+            }
+        });
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !formSubmitting) {
+                const activeForm = document.querySelector('form[style="display: block;"]');
+                if (activeForm) {
+                    activeForm.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+    </script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 text-gray-600 py-8 mt-12 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm font-medium">© 2026 TaxCalm - Business Intelligence Platform | All Rights Reserved</p>
+            <p class="text-xs mt-2 text-gray-500">Data updated in real-time | AI-powered insights | Secure & Confidential</p>
+        </div>
+    </footer>
+</body>
+</html>
