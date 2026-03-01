@@ -1,4 +1,4 @@
-# TaxClam v2.0
+# TaxCalm 
 
 **Your comprehensive, privacy-first companion for MSME GST management.**
 
