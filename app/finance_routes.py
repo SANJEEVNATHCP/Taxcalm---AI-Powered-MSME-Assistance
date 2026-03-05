@@ -1495,5 +1495,471 @@ def get_caa_meetings_stats():
         print(f"Error getting CAA meeting stats: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ==================== CUSTOMER MANAGEMENT ROUTES ====================
+
+@finance_bp.route('/customers', methods=['GET'])
+def get_customers():
+    """Get all customers with optional filters"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get query parameters
+        search = request.args.get('search', '')
+        status = request.args.get('status')
+        
+        # Build query
+        query = 'SELECT * FROM customers WHERE 1=1'
+        params = []
+        
+        if search:
+            query += ' AND (name LIKE ? OR email LIKE ? OR gstin LIKE ?)'
+            search_param = f'%{search}%'
+            params.extend([search_param, search_param, search_param])
+        
+        if status:
+            query += ' AND status = ?'
+            params.append(status)
+        
+        query += ' ORDER BY name ASC'
+        
+        cursor.execute(query, params)
+        customers = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': customers,
+            'count': len(customers)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching customers: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/customers', methods=['POST'])
+def create_customer():
+    """Create a new customer"""
+    try:
+        data = request.json
+        
+        # Validate required fields
+        required = ['name']
+        valid, error = validate_required_fields(data, required)
+        if not valid:
+            return jsonify({'success': False, 'error': error}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Generate customer code
+        current_year = datetime.now().year
+        cursor.execute('SELECT MAX(id) FROM customers')
+        result = cursor.fetchone()
+        max_id = result[0] if result[0] else 0
+        customer_code = f"CUST-{current_year}-{str(max_id + 1).zfill(4)}"
+        
+        timestamp = get_current_timestamp()
+        
+        cursor.execute('''
+            INSERT INTO customers 
+            (customer_code, name, email, phone, gstin, pan_number, billing_address, 
+             shipping_address, city, state, state_code, pincode, payment_terms, 
+             credit_limit, opening_balance, current_balance, status, user_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            customer_code,
+            data['name'],
+            data.get('email', ''),
+            data.get('phone', ''),
+            data.get('gstin', ''),
+            data.get('pan_number', ''),
+            data.get('billing_address', ''),
+            data.get('shipping_address', ''),
+            data.get('city', ''),
+            data.get('state', ''),
+            data.get('state_code', ''),
+            data.get('pincode', ''),
+            data.get('payment_terms', 'Net30'),
+            float(data.get('credit_limit', 0)),
+            float(data.get('opening_balance', 0)),
+            float(data.get('opening_balance', 0)),  # current_balance = opening_balance initially
+            data.get('status', 'Active'),
+            data.get('user_id', 1),
+            timestamp,
+            timestamp
+        ))
+        
+        customer_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Customer created successfully',
+            'customer_id': customer_id,
+            'customer_code': customer_code
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating customer: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/customers/<int:customer_id>', methods=['GET'])
+def get_customer(customer_id):
+    """Get a single customer by ID"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM customers WHERE id = ?', (customer_id,))
+        customer = cursor.fetchone()
+        
+        if not customer:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Customer not found'}), 404
+        
+        customer_data = dict(customer)
+        
+        # Get invoice count and total balance
+        cursor.execute('''
+            SELECT COUNT(*) as invoice_count, COALESCE(SUM(balance_due), 0) as total_due
+            FROM invoices 
+            WHERE customer_id = ? AND payment_status != 'Paid'
+        ''', (customer_id,))
+        
+        stats = cursor.fetchone()
+        customer_data['invoice_count'] = stats[0] if stats else 0
+        customer_data['total_outstanding'] = stats[1] if stats else 0
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': customer_data
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching customer: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/customers/<int:customer_id>', methods=['PUT'])
+def update_customer(customer_id):
+    """Update an existing customer"""
+    try:
+        data = request.json
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if customer exists
+        cursor.execute('SELECT id FROM customers WHERE id = ?', (customer_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'error': 'Customer not found'}), 404
+        
+        # Build update query dynamically
+        update_fields = []
+        params = []
+        
+        allowed_fields = ['name', 'email', 'phone', 'gstin', 'pan_number', 'billing_address',
+                         'shipping_address', 'city', 'state', 'state_code', 'pincode', 
+                         'payment_terms', 'credit_limit', 'status']
+        
+        for field in allowed_fields:
+            if field in data:
+                update_fields.append(f'{field} = ?')
+                params.append(data[field])
+        
+        if not update_fields:
+            conn.close()
+            return jsonify({'success': False, 'error': 'No fields to update'}), 400
+        
+        # Add updated_at timestamp
+        update_fields.append('updated_at = ?')
+        params.append(get_current_timestamp())
+        params.append(customer_id)
+        
+        query = f"UPDATE customers SET {', '.join(update_fields)} WHERE id = ?"
+        cursor.execute(query, params)
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Customer updated successfully'
+        }), 200
+        
+    except Exception as e:
+        print(f"Error updating customer: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/customers/<int:customer_id>', methods=['DELETE'])
+def delete_customer(customer_id):
+    """Soft delete a customer (set status to Inactive)"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if customer has pending invoices
+        cursor.execute('''
+            SELECT COUNT(*) FROM invoices 
+            WHERE customer_id = ? AND payment_status != 'Paid'
+        ''', (customer_id,))
+        
+        pending_count = cursor.fetchone()[0]
+        
+        if pending_count > 0:
+            conn.close()
+            return jsonify({
+                'success': False, 
+                'error': f'Cannot delete customer with {pending_count} pending invoice(s)'
+            }), 400
+        
+        # Soft delete - set status to Inactive
+        cursor.execute('''
+            UPDATE customers 
+            SET status = 'Inactive', updated_at = ?
+            WHERE id = ?
+        ''', (get_current_timestamp(), customer_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Customer deactivated successfully'
+        }), 200
+        
+    except Exception as e:
+        print(f"Error deleting customer: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ==================== BANK ACCOUNT MANAGEMENT ROUTES ====================
+
+@finance_bp.route('/bank-accounts', methods=['GET'])
+def get_bank_accounts():
+    """Get all bank accounts"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        status = request.args.get('status')
+        
+        query = 'SELECT * FROM bank_accounts WHERE 1=1'
+        params = []
+        
+        if status:
+            query += ' AND status = ?'
+            params.append(status)
+        
+        query += ' ORDER BY account_name ASC'
+        
+        cursor.execute(query, params)
+        accounts = [dict(row) for row in cursor.fetchall()]
+        
+        # Mask account numbers (show only last 4 digits)
+        for account in accounts:
+            if account.get('account_number'):
+                acc_num = account['account_number']
+                if len(acc_num) > 4:
+                    account['account_number_masked'] = 'XXXX' + acc_num[-4:]
+                else:
+                    account['account_number_masked'] = acc_num
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': accounts,
+            'count': len(accounts)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching bank accounts: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/bank-accounts', methods=['POST'])
+def create_bank_account():
+    """Create a new bank account"""
+    try:
+        data = request.json
+        
+        # Validate required fields
+        required = ['account_name', 'account_number', 'bank_name']
+        valid, error = validate_required_fields(data, required)
+        if not valid:
+            return jsonify({'success': False, 'error': error}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = get_current_timestamp()
+        
+        cursor.execute('''
+            INSERT INTO bank_accounts 
+            (account_name, account_number, bank_name, branch, ifsc_code, account_type, 
+             currency, opening_balance, current_balance, opening_date, status, user_id, 
+             created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data['account_name'],
+            data['account_number'],
+            data['bank_name'],
+            data.get('branch', ''),
+            data.get('ifsc_code', ''),
+            data.get('account_type', 'Current'),
+            data.get('currency', 'INR'),
+            float(data.get('opening_balance', 0)),
+            float(data.get('opening_balance', 0)),  # current_balance = opening_balance initially
+            data.get('opening_date', timestamp),
+            data.get('status', 'Active'),
+            data.get('user_id', 1),
+            timestamp,
+            timestamp
+        ))
+        
+        account_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Bank account created successfully',
+            'account_id': account_id
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating bank account: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/bank-accounts/<int:account_id>', methods=['GET'])
+def get_bank_account(account_id):
+    """Get a single bank account by ID"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM bank_accounts WHERE id = ?', (account_id,))
+        account = cursor.fetchone()
+        
+        if not account:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Bank account not found'}), 404
+        
+        account_data = dict(account)
+        
+        # Mask account number
+        if account_data.get('account_number'):
+            acc_num = account_data['account_number']
+            if len(acc_num) > 4:
+                account_data['account_number_masked'] = 'XXXX' + acc_num[-4:]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': account_data
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching bank account: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/bank-accounts/<int:account_id>', methods=['PUT'])
+def update_bank_account(account_id):
+    """Update an existing bank account"""
+    try:
+        data = request.json
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if account exists
+        cursor.execute('SELECT id FROM bank_accounts WHERE id = ?', (account_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'error': 'Bank account not found'}), 404
+        
+        # Build update query dynamically
+        update_fields = []
+        params = []
+        
+        allowed_fields = ['account_name', 'bank_name', 'branch', 'ifsc_code', 
+                         'account_type', 'status']
+        
+        for field in allowed_fields:
+            if field in data:
+                update_fields.append(f'{field} = ?')
+                params.append(data[field])
+        
+        if not update_fields:
+            conn.close()
+            return jsonify({'success': False, 'error': 'No fields to update'}), 400
+        
+        # Add updated_at timestamp
+        update_fields.append('updated_at = ?')
+        params.append(get_current_timestamp())
+        params.append(account_id)
+        
+        query = f"UPDATE bank_accounts SET {', '.join(update_fields)} WHERE id = ?"
+        cursor.execute(query, params)
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Bank account updated successfully'
+        }), 200
+        
+    except Exception as e:
+        print(f"Error updating bank account: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/bank-accounts/<int:account_id>/transactions', methods=['GET'])
+def get_bank_account_transactions(account_id):
+    """Get all transactions for a specific bank account"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if account exists
+        cursor.execute('SELECT id FROM bank_accounts WHERE id = ?', (account_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'error': 'Bank account not found'}), 404
+        
+        # Get transactions
+        cursor.execute('''
+            SELECT * FROM bank_transactions 
+            WHERE bank_account_id = ? 
+            ORDER BY transaction_date DESC
+        ''', (account_id,))
+        
+        transactions = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': transactions,
+            'count': len(transactions)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching bank account transactions: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Export blueprint
 __all__ = ['finance_bp']
