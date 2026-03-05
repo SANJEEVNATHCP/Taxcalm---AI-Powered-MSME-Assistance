@@ -26,8 +26,3 @@ google-auth==2.27.0
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
 google-api-python-client==2.116.0
-
-# Hugging Face AI Voice Integration
-huggingface-hub==0.20.3
-soundfile==0.12.1
-pydub==0.25.1

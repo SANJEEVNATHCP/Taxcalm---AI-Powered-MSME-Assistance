@@ -701,7 +701,6 @@ async def get_ai_settings(user_id: int = 1):
             settings = {
                 "user_id": row["user_id"],
                 "agent_mode": row["agent_mode"],
-                "voice_enabled": bool(row["voice_enabled"]),
                 "auto_navigate": bool(row["auto_navigate"]),
                 "require_confirmation_amount": row["require_confirmation_amount"],
                 "updated_at": row["updated_at"]
@@ -711,7 +710,6 @@ async def get_ai_settings(user_id: int = 1):
             settings = {
                 "user_id": user_id,
                 "agent_mode": "safe",
-                "voice_enabled": True,
                 "auto_navigate": True,
                 "require_confirmation_amount": 0
             }
@@ -720,9 +718,9 @@ async def get_ai_settings(user_id: int = 1):
             now = datetime.now().isoformat()
             cursor.execute("""
                 INSERT INTO ai_user_settings 
-                (user_id, agent_mode, voice_enabled, auto_navigate, require_confirmation_amount, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (user_id, "safe", 1, 1, 0, now, now))
+                (user_id, agent_mode, auto_navigate, require_confirmation_amount, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (user_id, "safe", 1, 0, now, now))
             conn.commit()
         
         conn.close()
@@ -749,7 +747,6 @@ async def update_ai_settings(request: Request):
         data = await request.json()
         user_id = data.get("user_id", 1)
         agent_mode = data.get("agent_mode", "safe")
-        voice_enabled = data.get("voice_enabled", True)
         auto_navigate = data.get("auto_navigate", True)
         require_confirmation_amount = data.get("require_confirmation_amount", 0)
         
@@ -773,19 +770,18 @@ async def update_ai_settings(request: Request):
             cursor.execute("""
                 UPDATE ai_user_settings 
                 SET agent_mode = ?, 
-                    voice_enabled = ?, 
                     auto_navigate = ?, 
                     require_confirmation_amount = ?,
                     updated_at = ?
                 WHERE user_id = ?
-            """, (agent_mode, int(voice_enabled), int(auto_navigate), require_confirmation_amount, now, user_id))
+            """, (agent_mode, int(auto_navigate), require_confirmation_amount, now, user_id))
         else:
             # Insert new settings
             cursor.execute("""
                 INSERT INTO ai_user_settings 
-                (user_id, agent_mode, voice_enabled, auto_navigate, require_confirmation_amount, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (user_id, agent_mode, int(voice_enabled), int(auto_navigate), require_confirmation_amount, now, now))
+                (user_id, agent_mode, auto_navigate, require_confirmation_amount, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (user_id, agent_mode, int(auto_navigate), require_confirmation_amount, now, now))
         
         conn.commit()
         conn.close()
@@ -796,7 +792,6 @@ async def update_ai_settings(request: Request):
             "settings": {
                 "user_id": user_id,
                 "agent_mode": agent_mode,
-                "voice_enabled": voice_enabled,
                 "auto_navigate": auto_navigate,
                 "require_confirmation_amount": require_confirmation_amount
             }

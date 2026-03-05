@@ -33,9 +33,9 @@ echo   All servers starting...
 echo   Opening web browser...
 echo ========================================
 echo.
-echo   Flask Server:    http://localhost:8000
-echo   Unified Server:  http://localhost:8001  (Recommended)
-echo   Main Server:     http://localhost:8002
+echo   TaxCalm Server:  http://localhost:8000  (Recommended)
+echo   All servers now use port 8000
+echo.
 echo.
 echo   Press any key to open browser...
 echo ========================================

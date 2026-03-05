@@ -67,14 +67,6 @@ except ImportError as e:
 # Import Google Meet
 from app.google_meet import get_google_meet
 
-# Import HuggingFace Voice Service
-try:
-    from app.hf_voice_service import get_hf_voice_service
-    HF_VOICE_AVAILABLE = True
-except ImportError as e:
-    print(f"⚠️ HuggingFace Voice Service not available: {e}")
-    HF_VOICE_AVAILABLE = False
-
 # Import MCP Services
 try:
     from app.huggingface_mcp_service import (
@@ -1426,171 +1418,6 @@ async def service_worker():
         pass
     return {"status": "no service worker"}
 
-# ==================== HUGGING FACE VOICE AI ENDPOINTS ====================
-
-if HF_VOICE_AVAILABLE:
-    
-    @app.post("/api/voice/transcribe")
-    @limiter.limit("10/minute")
-    async def transcribe_audio(request: Request, audio: UploadFile = File(...)):
-        """
-        Transcribe audio to text using HuggingFace Whisper model
-        
-        Accepts: WAV, MP3, OGG, WEBM audio files (max 10MB)
-        Returns: {"text": str, "confidence": float, "success": bool}
-        """
-        try:
-            # Validate file size (max 10MB)
-            content = await audio.read()
-            if len(content) > 10 * 1024 * 1024:
-                raise HTTPException(status_code=413, detail="Audio file too large (max 10MB)")
-            
-            # Get HF service
-            hf_service = get_hf_voice_service()
-            
-            if not hf_service.is_available():
-                raise HTTPException(
-                    status_code=503, 
-                    detail="HuggingFace Voice Service not configured - set HUGGINGFACE_API_KEY in .env"
-                )
-            
-            # Detect format from filename
-            filename = audio.filename.lower()
-            if filename.endswith('.webm') or filename.endswith('.ogg'):
-                # Convert to WAV for better Whisper compatibility
-                content = await hf_service.convert_audio_format(
-                    content,
-                    from_format='webm' if filename.endswith('.webm') else 'ogg',
-                    to_format='wav',
-                    sample_rate=16000
-                )
-            
-            # Transcribe audio
-            result = await hf_service.transcribe_audio(content)
-            
-            return JSONResponse(content=result)
-            
-        except Exception as e:
-            print(f"❌ Transcription error: {str(e)}")
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "success": False,
-                    "error": str(e),
-                    "text": "",
-                    "confidence": 0.0
-                }
-            )
-    
-    @app.post("/api/voice/synthesize")
-    @limiter.limit("10/minute")
-    async def synthesize_speech(request: Request):
-        """
-        Convert text to speech using HuggingFace TTS model
-        
-        Request body: {"text": str, "voice": str, "speed": float}
-        Returns: {"audio_base64": str, "format": str, "success": bool}
-        """
-        try:
-            body = await request.json()
-            text = body.get("text", "")
-            voice = body.get("voice", "default")
-            speed = body.get("speed", 1.0)
-            
-            if not text or len(text) > 1000:
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Text must be between 1 and 1000 characters"
-                )
-            
-            # Get HF service
-            hf_service = get_hf_voice_service()
-            
-            if not hf_service.is_available():
-                raise HTTPException(
-                    status_code=503,
-                    detail="HuggingFace Voice Service not configured - set HUGGINGFACE_API_KEY in .env"
-                )
-            
-            # Synthesize speech
-            result = await hf_service.synthesize_speech(text, voice, speed)
-            
-            return JSONResponse(content=result)
-            
-        except Exception as e:
-            print(f"❌ TTS error: {str(e)}")
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "success": False,
-                    "error": str(e),
-                    "audio_base64": "",
-                    "format": ""
-                }
-            )
-    
-    @app.post("/api/voice/intent")
-    @limiter.limit("30/minute")
-    async def classify_intent(request: Request):
-        """
-        Classify user intent using HuggingFace zero-shot classification
-        
-        Request body: {"text": str, "labels": Optional[List[str]]}
-        Returns: {"intent": str, "confidence": float, "all_scores": dict}
-        """
-        try:
-            body = await request.json()
-            text = body.get("text", "")
-            candidate_labels = body.get("labels", None)
-            
-            if not text:
-                raise HTTPException(status_code=400, detail="Text is required")
-            
-            # Get HF service
-            hf_service = get_hf_voice_service()
-            
-            if not hf_service.is_available():
-                raise HTTPException(
-                    status_code=503,
-                    detail="HuggingFace Voice Service not configured - set HUGGINGFACE_API_KEY in .env"
-                )
-            
-            # Classify intent
-            result = await hf_service.classify_intent(text, candidate_labels)
-            
-            return JSONResponse(content=result)
-            
-        except Exception as e:
-            print(f"❌ Intent classification error: {str(e)}")
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "success": False,
-                    "error": str(e),
-                    "intent": "general question about tax",
-                    "confidence": 0.0
-                }
-            )
-    
-    @app.get("/api/voice/health")
-    async def voice_health_check():
-        """Check HuggingFace Voice Service health"""
-        try:
-            hf_service = get_hf_voice_service()
-            health = await hf_service.health_check()
-            return JSONResponse(content=health)
-        except Exception as e:
-            return JSONResponse(
-                status_code=503,
-                content={
-                    "status": "error",
-                    "message": str(e),
-                    "stt": False,
-                    "tts": False,
-                    "intent": False
-                }
-            )
-
 # ==================== STATIC FILES ====================
 
 # Mount static files
@@ -1852,15 +1679,15 @@ if __name__ == "__main__":
     print("✅ RAG System" if RAG_AVAILABLE else "⚠️  RAG System (Disabled)")
     print("✅ Static Files Server")
     print("=" * 70)
-    print("📍 Server running on: http://localhost:8001")
-    print("📍 API Documentation: http://localhost:8001/docs")
-    print("📍 Alternative Docs: http://localhost:8001/redoc")
+    print("📍 Server running on: http://localhost:8000")
+    print("📍 API Documentation: http://localhost:8000/docs")
+    print("📍 Alternative Docs: http://localhost:8000/redoc")
     print("=" * 70 + "\n")
     
     uvicorn.run(
         "unified_server:app",
         host="0.0.0.0",
-        port=8001,
+        port=8000,
         reload=False,
         log_level="info"
     )

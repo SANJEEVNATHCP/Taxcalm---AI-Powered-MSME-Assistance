@@ -31,9 +31,9 @@ Write-Host "  All servers starting..." -ForegroundColor Yellow
 Write-Host "  Opening web browser..." -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  Flask Server:    http://localhost:8000" -ForegroundColor White
-Write-Host "  Unified Server:  http://localhost:8001  (Recommended)" -ForegroundColor Green
-Write-Host "  Main Server:     http://localhost:8002" -ForegroundColor White
+Write-Host "  TaxCalm Server:  http://localhost:8000  (Recommended)" -ForegroundColor Green
+Write-Host "  All servers now use port 8000" -ForegroundColor White
+Write-Host "" -ForegroundColor White
 Write-Host ""
 Write-Host "  Waiting for servers to start..." -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Cyan
