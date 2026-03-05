@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Reconciliation - TaxCalm</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .form-input {
+            @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+        }
+        .btn-primary {
+            @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition;
+        }
+        .modal {
+            @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4;
+        }
+        .split-panel {
+            height: calc(100vh - 350px);
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Bank Reconciliation</h1>
+                    <p class="text-sm text-gray-500 mt-1">Match bank statements with book transactions</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button id="uploadStatementBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition">
+                        <svg class="w-5 h-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        Upload Statement
+                    </button>
+                    <button id="refreshReconciliationBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition">
+                        <svg class="w-5 h-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh
+                    </button>
+                    <button id="runAutoMatchBtn" class="btn-primary">
+                        <svg class="w-5 h-5 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Run Auto-Match
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bank Account Selection -->
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Bank Account</label>
+            <select id="bankAccountSelect" class="form-input max-w-md">
+                <option value="">Select Bank Account</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Summary Dashboard -->
+    <div class="max-w-7xl mx-auto px-4 mb-4">
+        <div id="reconciliationSummary">
+            <!-- Summary cards will be rendered here -->
+        </div>
+    </div>
+    
+    <!-- Main Reconciliation Panel -->
+    <div class="max-w-7xl mx-auto px-4 pb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            
+            <!-- Left: Bank Transactions -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="bg-blue-50 px-4 py-3 border-b border-blue-200">
+                    <h2 class="text-lg font-semibold text-blue-900">Bank Transactions</h2>
+                    <p class="text-xs text-blue-700 mt-1">Unmatched transactions from bank statements</p>
+                </div>
+                <div id="bankTransactionsList" class="split-panel p-3">
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+                        <p class="mt-4">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Center: Match Suggestions -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="bg-green-50 px-4 py-3 border-b border-green-200">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-semibold text-green-900">Suggested Matches</h2>
+                            <p class="text-xs text-green-700 mt-1">AI-powered match suggestions</p>
+                        </div>
+                        <button id="acceptAllHighBtn" class="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition">
+                            Accept All High
+                        </button>
+                    </div>
+                </div>
+                <div id="matchSuggestions" class="split-panel p-3">
+                    <div class="text-center py-12 text-gray-500">
+                        <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <p class="mt-2">Click "Run Auto-Match" to find matches</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: Book Transactions -->
+            <div class="bg-white rounded-lg shadow-sm">
+                <div class="bg-purple-50 px-4 py-3 border-b border-purple-200">
+                    <h2 class="text-lg font-semibold text-purple-900">Book Transactions</h2>
+                    <p class="text-xs text-purple-700 mt-1">Unreconciled accounting entries • Drag bank txns here</p>
+                </div>
+                <div id="bookTransactionsList" class="split-panel p-3">
+                    <div class="text-center py-12 text-gray-500">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600 mx-auto"></div>
+                        <p class="mt-4">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Instructions -->
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex">
+                <svg class="w-6 h-6 text-blue-600 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="text-sm text-blue-800">
+                    <p class="font-semibold mb-1">How to use:</p>
+                    <ul class="list-disc ml-5 space-y-1">
+                        <li>Upload bank statements using "Upload Statement" button</li>
+                        <li>Click "Run Auto-Match" to find automatic matches</li>
+                        <li>Review suggested matches in the center panel and click "Accept" to confirm</li>
+                        <li>For manual matching, drag a bank transaction and drop it on a book transaction</li>
+                        <li>Use "Accept All High" to automatically accept high confidence matches (95%+)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upload Statement Modal -->
+    <div id="uploadModal" class="modal hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+            <div class="bg-blue-50 border-b border-blue-200 px-6 py-4 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-900">Upload Bank Statement</h2>
+                <button onclick="reconciliationManager.hideUploadModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="uploadForm" class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account *</label>
+                        <select id="uploadBankAccount" name="bank_account_id" class="form-input" required>
+                            <option value="">Select Bank Account</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name *</label>
+                        <select name="bank_name" class="form-input" required>
+                            <option value="">Auto-detect from file</option>
+                            <option value="SBI">State Bank of India (SBI)</option>
+                            <option value="HDFC">HDFC Bank</option>
+                            <option value="ICICI">ICICI Bank</option>
+                            <option value="AXIS">Axis Bank</option>
+                            <option value="KOTAK">Kotak Mahindra Bank</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Statement File *</label>
+                        <input type="file" id="statementFile" name="file" accept=".csv,.xls,.xlsx" class="form-input" required>
+                        <p class="text-xs text-gray-500 mt-1">Supported formats: CSV, Excel (.xls, .xlsx)</p>
+                    </div>
+                    
+                    <input type="hidden" name="user_id" value="1">
+                    
+                    <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                        <div class="flex">
+                            <svg class="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <div class="text-xs text-yellow-800">
+                                <p class="font-semibold mb-1">Tips:</p>
+                                <ul class="list-disc ml-4 space-y-1">
+                                    <li>Download statement from your bank's net banking</li>
+                                    <li>Ensure the file contains transaction details</li>
+                                    <li>Duplicate transactions will be skipped automatically</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                    <button type="button" id="cancelUploadBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition">
+                        Cancel
+                    </button>
+                    <button type="button" id="uploadFileBtn" class="btn-primary px-4 py-2">
+                        Upload & Parse
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/static/js/reconciliation-manager.js"></script>
+</body>
+</html>

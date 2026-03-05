@@ -1961,5 +1961,1120 @@ def get_bank_account_transactions(account_id):
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ==================== INVOICE MANAGEMENT ROUTES ====================
+
+@finance_bp.route('/invoices', methods=['GET'])
+def get_invoices():
+    """Get all invoices with optional filters"""
+    try:
+        from app.invoice_numbering import parse_invoice_number
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get query parameters
+        customer_id = request.args.get('customer_id')
+        payment_status = request.args.get('payment_status')
+        status = request.args.get('status')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        search = request.args.get('search', '')
+        
+        # Build query with customer join
+        query = '''
+            SELECT i.*, c.name as customer_name, c.email as customer_email 
+            FROM invoices i
+            LEFT JOIN customers c ON i.customer_id = c.id
+            WHERE 1=1
+        '''
+        params = []
+        
+        if customer_id:
+            query += ' AND i.customer_id = ?'
+            params.append(customer_id)
+        
+        if payment_status:
+            query += ' AND i.payment_status = ?'
+            params.append(payment_status)
+        
+        if status:
+            query += ' AND i.status = ?'
+            params.append(status)
+        
+        if start_date:
+            query += ' AND i.invoice_date >= ?'
+            params.append(start_date)
+        
+        if end_date:
+            query += ' AND i.invoice_date <= ?'
+            params.append(end_date)
+        
+        if search:
+            query += ' AND (i.invoice_number LIKE ? OR c.name LIKE ?)'
+            search_param = f'%{search}%'
+            params.extend([search_param, search_param])
+        
+        query += ' ORDER BY i.invoice_date DESC, i.id DESC'
+        
+        cursor.execute(query, params)
+        invoices = [dict(row) for row in cursor.fetchall()]
+        
+        # Calculate aging for each invoice
+        from datetime import datetime
+        today = datetime.now().date()
+        
+        for invoice in invoices:
+            if invoice['due_date'] and invoice['payment_status'] != 'Paid':
+                due_date = datetime.fromisoformat(invoice['due_date']).date()
+                days_overdue = (today - due_date).days
+                invoice['days_overdue'] = days_overdue if days_overdue > 0 else 0
+            else:
+                invoice['days_overdue'] = 0
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': invoices,
+            'count': len(invoices)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching invoices: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/invoices', methods=['POST'])
+def create_invoice():
+    """Create a new invoice with line items"""
+    try:
+        from app.invoice_numbering import generate_invoice_number
+        from app.gst_calculator import calculate_invoice_gst
+        
+        data = request.json
+        
+        # Validate required fields
+        required = ['customer_id', 'invoice_date', 'due_date', 'items']
+        valid, error = validate_required_fields(data, required)
+        if not valid:
+            return jsonify({'success': False, 'error': error}), 400
+        
+        if not data['items'] or len(data['items']) == 0:
+            return jsonify({'success': False, 'error': 'At least one item is required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get customer state for GST calculation
+        cursor.execute('SELECT state FROM customers WHERE id = ?', (data['customer_id'],))
+        customer = cursor.fetchone()
+        if not customer:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Customer not found'}), 404
+        
+        customer_state = customer[0] if isinstance(customer, dict) else customer[0]
+        
+        # Calculate GST
+        gst_calc = calculate_invoice_gst(data['items'], customer_state)
+        
+        # Generate invoice number
+        invoice_number = generate_invoice_number()
+        
+        timestamp = get_current_timestamp()
+        
+        # Insert invoice
+        cursor.execute('''
+            INSERT INTO invoices 
+            (invoice_number, customer_id, invoice_date, due_date, billing_address,
+             shipping_address, subtotal, cgst_amount, sgst_amount, igst_amount,
+             total_tax, discount_amount, grand_total, amount_paid, balance_due,
+             payment_status, status, notes, terms_conditions, bank_account_id,
+             user_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            invoice_number,
+            data['customer_id'],
+            data['invoice_date'],
+            data['due_date'],
+            data.get('billing_address', ''),
+            data.get('shipping_address', ''),
+            gst_calc['subtotal'],
+            gst_calc['cgst_total'],
+            gst_calc['sgst_total'],
+            gst_calc['igst_total'],
+            gst_calc['total_tax'],
+            gst_calc['total_discount'],
+            gst_calc['grand_total'],
+            0,  # amount_paid
+            gst_calc['grand_total'],  # balance_due
+            'Unpaid',  # payment_status
+            data.get('status', 'Draft'),
+            data.get('notes', ''),
+            data.get('terms_conditions', ''),
+            data.get('bank_account_id'),
+            data.get('user_id', 1),
+            timestamp,
+            timestamp
+        ))
+        
+        invoice_id = cursor.lastrowid
+        
+        # Insert invoice items
+        for idx, item in enumerate(data['items'], 1):
+            item_calc = gst_calc['items'][idx - 1]
+            
+            cursor.execute('''
+                INSERT INTO invoice_items
+                (invoice_id, line_number, item_description, hsn_sac_code, quantity,
+                 unit_of_measure, unit_price, discount_percent, taxable_amount,
+                 gst_rate, cgst_amount, sgst_amount, igst_amount, total_amount)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                invoice_id,
+                idx,
+                item['item_description'],
+                item.get('hsn_sac_code', ''),
+                item_calc['quantity'],
+                item.get('unit_of_measure', 'Nos'),
+                item_calc['unit_price'],
+                item_calc['discount_percent'],
+                item_calc['taxable_amount'],
+                item_calc['gst_rate'],
+                item_calc['cgst'],
+                item_calc['sgst'],
+                item_calc['igst'],
+                item_calc['total_amount']
+            ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Invoice created successfully',
+            'invoice_id': invoice_id,
+            'invoice_number': invoice_number,
+            'grand_total': gst_calc['grand_total']
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating invoice: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/invoices/<int:invoice_id>', methods=['GET'])
+def get_invoice(invoice_id):
+    """Get single invoice with items and payment history"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get invoice with customer details
+        cursor.execute('''
+            SELECT i.*, c.name as customer_name, c.email as customer_email,
+                   c.phone as customer_phone, c.gstin as customer_gstin,
+                   c.billing_address as customer_billing_address
+            FROM invoices i
+            LEFT JOIN customers c ON i.customer_id = c.id
+            WHERE i.id = ?
+        ''', (invoice_id,))
+        
+        invoice = cursor.fetchone()
+        if not invoice:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Invoice not found'}), 404
+        
+        invoice_data = dict(invoice)
+        
+        # Get invoice items
+        cursor.execute('''
+            SELECT * FROM invoice_items 
+            WHERE invoice_id = ? 
+            ORDER BY line_number
+        ''', (invoice_id,))
+        
+        invoice_data['items'] = [dict(row) for row in cursor.fetchall()]
+        
+        # Get payment history
+        cursor.execute('''
+            SELECT * FROM invoice_payments 
+            WHERE invoice_id = ? 
+            ORDER BY payment_date DESC
+        ''', (invoice_id,))
+        
+        invoice_data['payments'] = [dict(row) for row in cursor.fetchall()]
+        
+        # Calculate aging
+        from datetime import datetime
+        if invoice_data['due_date'] and invoice_data['payment_status'] != 'Paid':
+            today = datetime.now().date()
+            due_date = datetime.fromisoformat(invoice_data['due_date']).date()
+            days_overdue = (today - due_date).days
+            invoice_data['days_overdue'] = days_overdue if days_overdue > 0 else 0
+        else:
+            invoice_data['days_overdue'] = 0
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': invoice_data
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching invoice: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/invoices/<int:invoice_id>', methods=['PUT'])
+def update_invoice(invoice_id):
+    """Update an existing invoice (only if status is Draft)"""
+    try:
+        data = request.json
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if invoice exists and is Draft
+        cursor.execute('SELECT status FROM invoices WHERE id = ?', (invoice_id,))
+        invoice = cursor.fetchone()
+        if not invoice:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Invoice not found'}), 404
+        
+        invoice_status = invoice[0] if isinstance(invoice, dict) else invoice[0]
+        if invoice_status != 'Draft':
+            conn.close()
+            return jsonify({'success': False, 'error': 'Can only edit Draft invoices'}), 400
+        
+        # Update basic fields
+        update_fields = []
+        params = []
+        
+        allowed_fields = ['due_date', 'billing_address', 'shipping_address', 
+                         'notes', 'terms_conditions', 'bank_account_id']
+        
+        for field in allowed_fields:
+            if field in data:
+                update_fields.append(f'{field} = ?')
+                params.append(data[field])
+        
+        if update_fields:
+            update_fields.append('updated_at = ?')
+            params.append(get_current_timestamp())
+            params.append(invoice_id)
+            
+            query = f"UPDATE invoices SET {', '.join(update_fields)} WHERE id = ?"
+            cursor.execute(query, params)
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Invoice updated successfully'
+        }), 200
+        
+    except Exception as e:
+        print(f"Error updating invoice: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/invoices/<int:invoice_id>/status', methods=['POST'])
+def update_invoice_status(invoice_id):
+    """Update invoice status (Draft -> Sent)"""
+    try:
+        data = request.json
+        new_status = data.get('status')
+        
+        if new_status not in ['Draft', 'Sent', 'Cancelled']:
+            return jsonify({'success': False, 'error': 'Invalid status'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = get_current_timestamp()
+        
+        if new_status == 'Sent':
+            cursor.execute('''
+                UPDATE invoices 
+                SET status = ?, sent_date = ?, updated_at = ?
+                WHERE id = ?
+            ''', (new_status, timestamp, timestamp, invoice_id))
+        else:
+            cursor.execute('''
+                UPDATE invoices 
+                SET status = ?, updated_at = ?
+                WHERE id = ?
+            ''', (new_status, timestamp, invoice_id))
+        
+        if cursor.rowcount == 0:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Invoice not found'}), 404
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Invoice status updated to {new_status}'
+        }), 200
+        
+    except Exception as e:
+        print(f"Error updating invoice status: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/invoices/<int:invoice_id>', methods=['DELETE'])
+def delete_invoice(invoice_id):
+    """Soft delete invoice (set status to Cancelled) if no payments made"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if invoice has payments
+        cursor.execute('SELECT amount_paid FROM invoices WHERE id = ?', (invoice_id,))
+        invoice = cursor.fetchone()
+        
+        if not invoice:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Invoice not found'}), 404
+        
+        amount_paid = invoice[0] if isinstance(invoice, dict) else invoice[0]
+        if amount_paid > 0:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Cannot delete invoice with payments. Cancel it instead.'
+            }), 400
+        
+        # Set status to Cancelled
+        cursor.execute('''
+            UPDATE invoices 
+            SET status = 'Cancelled', updated_at = ?
+            WHERE id = ?
+        ''', (get_current_timestamp(), invoice_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Invoice cancelled successfully'
+        }), 200
+        
+    except Exception as e:
+        print(f"Error deleting invoice: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/invoices/<int:invoice_id>/pdf', methods=['GET'])
+def download_invoice_pdf(invoice_id):
+    """Generate and download invoice PDF"""
+    try:
+        from app.invoice_pdf import generate_invoice_pdf, get_company_data_from_db
+        from flask import send_file
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get invoice with customer details
+        cursor.execute('''
+            SELECT i.*, c.name as customer_name, c.email as customer_email,
+                   c.phone as customer_phone, c.gstin as customer_gstin,
+                   c.billing_address as customer_billing_address
+            FROM invoices i
+            LEFT JOIN customers c ON i.customer_id = c.id
+            WHERE i.id = ?
+        ''', (invoice_id,))
+        
+        invoice = cursor.fetchone()
+        if not invoice:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Invoice not found'}), 404
+        
+        invoice_data = dict(invoice)
+        
+        # Get invoice items
+        cursor.execute('''
+            SELECT * FROM invoice_items 
+            WHERE invoice_id = ? 
+            ORDER BY line_number
+        ''', (invoice_id,))
+        
+        invoice_data['items'] = [dict(row) for row in cursor.fetchall()]
+        
+        # Get company data
+        company_data = get_company_data_from_db(conn)
+        
+        conn.close()
+        
+        # Generate PDF
+        pdf_data = generate_invoice_pdf(invoice_data, company_data)
+        
+        # Return PDF as download
+        from io import BytesIO
+        pdf_buffer = BytesIO(pdf_data)
+        pdf_buffer.seek(0)
+        
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f"{invoice_data['invoice_number']}.pdf"
+        )
+        
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/invoices/<int:invoice_id>/payments', methods=['POST'])
+def record_invoice_payment(invoice_id):
+    """Record a payment against an invoice"""
+    try:
+        data = request.json
+        
+        # Validate required fields
+        required = ['payment_date', 'amount', 'payment_mode']
+        valid, error = validate_required_fields(data, required)
+        if not valid:
+            return jsonify({'success': False, 'error': error}), 400
+        
+        amount = float(data['amount'])
+        if amount <= 0:
+            return jsonify({'success': False, 'error': 'Payment amount must be greater than 0'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get invoice details
+        cursor.execute('''
+            SELECT balance_due, amount_paid, grand_total, customer_id 
+            FROM invoices 
+            WHERE id = ?
+        ''', (invoice_id,))
+        
+        invoice = cursor.fetchone()
+        if not invoice:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Invoice not found'}), 404
+        
+        balance_due = float(invoice[0] if isinstance(invoice, dict) else invoice[0])
+        amount_paid = float(invoice[1] if isinstance(invoice, dict) else invoice[1])
+        grand_total = float(invoice[2] if isinstance(invoice, dict) else invoice[2])
+        customer_id = invoice[3] if isinstance(invoice, dict) else invoice[3]
+        
+        if amount > balance_due:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': f'Payment amount (₹{amount}) exceeds balance due (₹{balance_due})'
+            }), 400
+        
+        timestamp = get_current_timestamp()
+        
+        # Insert payment record
+        cursor.execute('''
+            INSERT INTO invoice_payments
+            (invoice_id, payment_date, amount, payment_mode, bank_account_id,
+             reference_number, notes, user_id, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            invoice_id,
+            data['payment_date'],
+            amount,
+            data['payment_mode'],
+            data.get('bank_account_id'),
+            data.get('reference_number', ''),
+            data.get('notes', ''),
+            data.get('user_id', 1),
+            timestamp
+        ))
+        
+        payment_id = cursor.lastrowid
+        
+        # Update invoice amounts and status
+        new_amount_paid = amount_paid + amount
+        new_balance_due = grand_total - new_amount_paid
+        
+        if new_balance_due <= 0.01:  # Fully paid (allowing 1 paisa tolerance)
+            payment_status = 'Paid'
+            paid_date = timestamp
+        elif new_amount_paid > 0:
+            payment_status = 'PartiallyPaid'
+            paid_date = None
+        else:
+            payment_status = 'Unpaid'
+            paid_date = None
+        
+        cursor.execute('''
+            UPDATE invoices 
+            SET amount_paid = ?, balance_due = ?, payment_status = ?, 
+                paid_date = ?, updated_at = ?
+            WHERE id = ?
+        ''', (new_amount_paid, new_balance_due, payment_status, paid_date, timestamp, invoice_id))
+        
+        # Create corresponding transaction entry
+        cursor.execute('''
+            INSERT INTO transactions
+            (transaction_date, type, category, amount, description, reference_number,
+             payment_mode, invoice_id, customer_id, user_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data['payment_date'],
+            'Income',
+            'Sales',
+            amount,
+            f'Payment received for invoice',
+            data.get('reference_number', ''),
+            data['payment_mode'],
+            invoice_id,
+            customer_id,
+            data.get('user_id', 1),
+            timestamp,
+            timestamp
+        ))
+        
+        transaction_id = cursor.lastrowid
+        
+        # Link transaction to payment
+        cursor.execute('''
+            UPDATE invoice_payments 
+            SET transaction_id = ?
+            WHERE id = ?
+        ''', (transaction_id, payment_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Payment recorded successfully',
+            'payment_id': payment_id,
+            'transaction_id': transaction_id,
+            'new_balance_due': new_balance_due,
+            'payment_status': payment_status
+        }), 201
+        
+    except Exception as e:
+        print(f"Error recording payment: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+            this.showToast('Failed to record payment', 'error');
+        }
+    }
+    
+    // ==================== BANK RECONCILIATION ROUTES ====================
+
+@finance_bp.route('/bank-statements/import', methods=['POST'])
+def import_bank_statement():
+    """Import and parse bank statement file"""
+    try:
+        from app.bank_parser import BankStatementParser, detect_bank_from_filename
+        from werkzeug.utils import secure_filename
+        
+        # Check if file is present
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'error': 'No file provided'}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
+        
+        # Get form data
+        bank_account_id = request.form.get('bank_account_id')
+        bank_name = request.form.get('bank_name', '')
+        
+        if not bank_account_id:
+            return jsonify({'success': False, 'error': 'Bank account ID is required'}), 400
+        
+        # Detect bank if not provided
+        if not bank_name:
+            bank_name = detect_bank_from_filename(file.filename)
+        
+        # Read file content
+        file_content = BytesIO(file.read())
+        
+        # Parse statement
+        parser = BankStatementParser(bank_name)
+        result = parser.parse_file(file_content, secure_filename(file.filename))
+        
+        if not result['success']:
+            return jsonify(result), 400
+        
+        # Validate statement
+        validation = parser.validate_statement(result['transactions'], result['summary'])
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = get_current_timestamp()
+        
+        # Create bank statement record
+        cursor.execute('''
+            INSERT INTO bank_statements
+            (bank_account_id, statement_date, start_date, end_date, opening_balance,
+             closing_balance, total_debits, total_credits, file_name, bank_name,
+             upload_date, uploaded_by, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            bank_account_id,
+            result['summary']['end_date'],
+            result['summary']['start_date'],
+            result['summary']['end_date'],
+            result['summary'].get('opening_balance'),
+            result['summary'].get('closing_balance'),
+            result['summary']['total_debits'],
+            result['summary']['total_credits'],
+            secure_filename(file.filename),
+            bank_name,
+            timestamp,
+            request.form.get('user_id', 1),
+            'Uploaded'
+        ))
+        
+        statement_id = cursor.lastrowid
+        
+        # Insert transactions
+        inserted_count = 0
+        skipped_count = 0
+        
+        for txn in result['transactions']:
+            try:
+                # Check if transaction already exists (avoid duplicates)
+                cursor.execute('''
+                    SELECT id FROM bank_transactions
+                    WHERE bank_account_id = ? AND transaction_date = ? 
+                    AND amount = ? AND description = ?
+                ''', (bank_account_id, txn['transaction_date'], txn['amount'], txn['description']))
+                
+                if cursor.fetchone():
+                    skipped_count += 1
+                    continue
+                
+                cursor.execute('''
+                    INSERT INTO bank_transactions
+                    (bank_statement_id, bank_account_id, transaction_date, transaction_type,
+                     amount, description, reference_number, balance, upi_id, cheque_number,
+                     reconciliation_status, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    statement_id,
+                    bank_account_id,
+                    txn['transaction_date'],
+                    txn['transaction_type'],
+                    txn['amount'],
+                    txn['description'],
+                    txn['reference_number'],
+                    txn.get('balance'),
+                    txn.get('upi_id'),
+                    txn.get('cheque_number'),
+                    'Unmatched',
+                    timestamp
+                ))
+                
+                inserted_count += 1
+                
+            except Exception as e:
+                print(f"Error inserting transaction: {e}")
+                continue
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Bank statement imported successfully',
+            'statement_id': statement_id,
+            'summary': result['summary'],
+            'validation': validation,
+            'inserted_transactions': inserted_count,
+            'skipped_duplicates': skipped_count,
+            'parsing_errors': len(result.get('errors', []))
+        }), 201
+        
+    except Exception as e:
+        print(f"Error importing bank statement: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/bank-statements', methods=['GET'])
+def get_bank_statements():
+    """Get all uploaded bank statements"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        bank_account_id = request.args.get('bank_account_id')
+        
+        query = '''
+            SELECT bs.*, ba.bank_name || ' - ' || ba.account_number as account_display
+            FROM bank_statements bs
+            LEFT JOIN bank_accounts ba ON bs.bank_account_id = ba.id
+            WHERE 1=1
+        '''
+        params = []
+        
+        if bank_account_id:
+            query += ' AND bs.bank_account_id = ?'
+            params.append(bank_account_id)
+        
+        query += ' ORDER BY bs.statement_date DESC'
+        
+        cursor.execute(query, params)
+        statements = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': statements
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching bank statements: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/bank-transactions', methods=['GET'])
+def get_bank_transactions():
+    """Get bank transactions with filters"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get query parameters
+        bank_account_id = request.args.get('bank_account_id')
+        statement_id = request.args.get('statement_id')
+        reconciliation_status = request.args.get('reconciliation_status')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        transaction_type = request.args.get('transaction_type')
+        
+        query = 'SELECT * FROM bank_transactions WHERE 1=1'
+        params = []
+        
+        if bank_account_id:
+            query += ' AND bank_account_id = ?'
+            params.append(bank_account_id)
+        
+        if statement_id:
+            query += ' AND bank_statement_id = ?'
+            params.append(statement_id)
+        
+        if reconciliation_status:
+            query += ' AND reconciliation_status = ?'
+            params.append(reconciliation_status)
+        
+        if start_date:
+            query += ' AND transaction_date >= ?'
+            params.append(start_date)
+        
+        if end_date:
+            query += ' AND transaction_date <= ?'
+            params.append(end_date)
+        
+        if transaction_type:
+            query += ' AND transaction_type = ?'
+            params.append(transaction_type)
+        
+        query += ' ORDER BY transaction_date DESC, id DESC'
+        
+        cursor.execute(query, params)
+        transactions = [dict(row) for row in cursor.fetchall()]
+        
+        # Calculate summary
+        total_debits = sum(t['amount'] for t in transactions if t['transaction_type'] == 'Debit')
+        total_credits = sum(t['amount'] for t in transactions if t['transaction_type'] == 'Credit')
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': transactions,
+            'summary': {
+                'total_transactions': len(transactions),
+                'total_debits': total_debits,
+                'total_credits': total_credits,
+                'net': total_credits - total_debits
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching bank transactions: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/auto-match', methods=['POST'])
+def auto_match_transactions():
+    """Run auto-matching for bank reconciliation"""
+    try:
+        from app.reconciliation_engine import ReconciliationEngine
+        
+        data = request.json
+        bank_account_id = data.get('bank_account_id')
+        date_range_days = data.get('date_range_days', 90)
+        
+        if not bank_account_id:
+            return jsonify({'success': False, 'error': 'Bank account ID is required'}), 400
+        
+        conn = get_db_connection()
+        engine = ReconciliationEngine(conn)
+        
+        result = engine.auto_match_all(bank_account_id, date_range_days)
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Found {result["total_matches"]} potential matches',
+            'data': result
+        }), 200
+        
+    except Exception as e:
+        print(f"Error in auto-matching: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/accept-match', methods=['POST'])
+def accept_match():
+    """Accept a suggested match"""
+    try:
+        from app.reconciliation_engine import ReconciliationEngine
+        
+        data = request.json
+        bank_transaction_id = data.get('bank_transaction_id')
+        book_transaction_id = data.get('book_transaction_id')
+        
+        if not bank_transaction_id or not book_transaction_id:
+            return jsonify({'success': False, 'error': 'Both transaction IDs are required'}), 400
+        
+        conn = get_db_connection()
+        engine = ReconciliationEngine(conn)
+        
+        success = engine.accept_match(bank_transaction_id, book_transaction_id, matched_by='User')
+        
+        conn.close()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Match accepted successfully'
+            }), 200
+        else:
+            return jsonify({'success': False, 'error': 'Failed to accept match'}), 500
+        
+    except Exception as e:
+        print(f"Error accepting match: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/manual-match', methods=['POST'])
+def manual_match():
+    """Manually match two transactions"""
+    try:
+        from app.reconciliation_engine import ReconciliationEngine
+        
+        data = request.json
+        bank_transaction_id = data.get('bank_transaction_id')
+        book_transaction_id = data.get('book_transaction_id')
+        
+        if not bank_transaction_id or not book_transaction_id:
+            return jsonify({'success': False, 'error': 'Both transaction IDs are required'}), 400
+        
+        conn = get_db_connection()
+        engine = ReconciliationEngine(conn)
+        
+        success = engine.manual_match(bank_transaction_id, book_transaction_id)
+        
+        conn.close()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Transactions matched successfully'
+            }), 200
+        else:
+            return jsonify({'success': False, 'error': 'Failed to match transactions'}), 500
+        
+    except Exception as e:
+        print(f"Error in manual matching: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/unmatch/<int:bank_transaction_id>', methods=['POST'])
+def unmatch_transaction(bank_transaction_id):
+    """Unmatch a previously matched transaction"""
+    try:
+        from app.reconciliation_engine import ReconciliationEngine
+        
+        conn = get_db_connection()
+        engine = ReconciliationEngine(conn)
+        
+        success = engine.unmatch(bank_transaction_id)
+        
+        conn.close()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Transaction unmatched successfully'
+            }), 200
+        else:
+            return jsonify({'success': False, 'error': 'Transaction not found or not matched'}), 404
+        
+    except Exception as e:
+        print(f"Error unmatching transaction: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/summary', methods=['GET'])
+def get_reconciliation_summary():
+    """Get reconciliation summary statistics"""
+    try:
+        from app.reconciliation_engine import ReconciliationEngine
+        
+        bank_account_id = request.args.get('bank_account_id')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        if not bank_account_id:
+            return jsonify({'success': False, 'error': 'Bank account ID is required'}), 400
+        
+        conn = get_db_connection()
+        engine = ReconciliationEngine(conn)
+        
+        summary = engine.get_reconciliation_summary(bank_account_id, start_date, end_date)
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': summary
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching reconciliation summary: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/discrepancies', methods=['GET'])
+def get_reconciliation_discrepancies():
+    """Get unmatched/unreconciled transactions (discrepancies)"""
+    try:
+        bank_account_id = request.args.get('bank_account_id')
+        
+        if not bank_account_id:
+            return jsonify({'success': False, 'error': 'Bank account ID is required'}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get unmatched bank transactions
+        cursor.execute('''
+            SELECT * FROM bank_transactions
+            WHERE bank_account_id = ? AND reconciliation_status = 'Unmatched'
+            ORDER BY transaction_date DESC
+        ''', (bank_account_id,))
+        
+        unmatched_bank = [dict(row) for row in cursor.fetchall()]
+        
+        # Get unreconciled book transactions
+        cursor.execute('''
+            SELECT * FROM transactions
+            WHERE bank_account_id = ? AND reconciliation_status = 'Unreconciled'
+            ORDER BY transaction_date DESC
+        ''', (bank_account_id,))
+        
+        unreconciled_book = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'unmatched_bank_transactions': unmatched_bank,
+                'unreconciled_book_transactions': unreconciled_book,
+                'unmatched_bank_count': len(unmatched_bank),
+                'unreconciled_book_count': len(unreconciled_book)
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching discrepancies: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/rules', methods=['GET'])
+def get_reconciliation_rules():
+    """Get all reconciliation rules"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM reconciliation_rules ORDER BY priority DESC')
+        rules = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': rules
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching rules: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@finance_bp.route('/reconciliation/rules', methods=['POST'])
+def create_reconciliation_rule():
+    """Create a new reconciliation rule"""
+    try:
+        data = request.json
+        
+        required = ['rule_name', 'pattern', 'match_type', 'book_category']
+        valid, error = validate_required_fields(data, required)
+        if not valid:
+            return jsonify({'success': False, 'error': error}), 400
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = get_current_timestamp()
+        
+        cursor.execute('''
+            INSERT INTO reconciliation_rules
+            (rule_name, pattern, match_type, book_category, priority, is_active, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data['rule_name'],
+            data['pattern'],
+            data['match_type'],
+            data['book_category'],
+            data.get('priority', 50),
+            data.get('is_active', 1),
+            timestamp
+        ))
+        
+        rule_id = cursor.lastrowid
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Reconciliation rule created successfully',
+            'rule_id': rule_id
+        }), 201
+        
+    except Exception as e:
+        print(f"Error creating rule: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # Export blueprint
 __all__ = ['finance_bp']
