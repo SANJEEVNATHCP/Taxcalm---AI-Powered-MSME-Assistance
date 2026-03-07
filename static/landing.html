@@ -709,6 +709,7 @@
       isWebGL2Supported,
       QUALITY_PRESETS,
     } from '/static/js/webgl-engine/quality-manager.js';
+    import { playIntroAnimation } from '/static/js/webgl-engine/intro-animation.js';
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js';
 
     // ── Loader helpers ──────────────────────────────────────────────────────
@@ -721,8 +722,8 @@
     }
 
     let _loaderDismissed = false;
-    // Safety net — loader ALWAYS hides within 8 s no matter what
-    const _safetyTimer = setTimeout(() => _dismissLoader(), 8000);
+    // Safety net — loader ALWAYS hides within 12 s no matter what
+    const _safetyTimer = setTimeout(() => _dismissLoader(), 12000);
 
     function _dismissLoader() {
       if (_loaderDismissed) return;
@@ -914,7 +915,19 @@
       }
     }
 
-    main();
+    // ── Intro orchestration ────────────────────────────────────────────────
+    // Dismiss the simple progress-bar loader immediately — the cinematic
+    // intro replaces it.  The main scene initialises silently in the
+    // background during the 10-second intro so it is ready the moment the
+    // intro fades out.
+    _dismissLoader();
+
+    // Fire both in parallel: intro plays on its own overlay canvas while
+    // the main WebGL scene warms up behind it.
+    Promise.all([
+      playIntroAnimation(),
+      main(),
+    ]).catch(err => console.warn('[TaxClam] Startup error:', err));
   </script>
 
 </body>
