@@ -1447,3 +1447,393 @@ async def get_google_meets_stats():
             'completed': 0,
             'cancelled': 0
         }
+
+
+# ==================== CUSTOMER MANAGEMENT ROUTES ====================
+
+class CustomerCreate(BaseModel):
+    name: str
+    email: Optional[str] = ""
+    phone: Optional[str] = ""
+    gstin: Optional[str] = ""
+    address: Optional[str] = ""
+    city: Optional[str] = ""
+    state: Optional[str] = ""
+    pincode: Optional[str] = ""
+
+@router.get("/customers")
+async def get_customers():
+    """Get all customers"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM customers ORDER BY created_at DESC')
+        customers = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return {
+            'success': True,
+            'data': customers,
+            'count': len(customers)
+        }
+        
+    except Exception as e:
+        print(f"Error fetching customers: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/customers")
+async def create_customer(customer: CustomerCreate):
+    """Create a new customer"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = datetime.now().isoformat()
+        
+        cursor.execute('''
+            INSERT INTO customers 
+            (name, email, phone, gstin, address, city, state, pincode, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            customer.name,
+            customer.email,
+            customer.phone,
+            customer.gstin,
+            customer.address,
+            customer.city,
+            customer.state,
+            customer.pincode,
+            timestamp,
+            timestamp
+        ))
+        
+        customer_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return {
+            'success': True,
+            'message': 'Customer created successfully',
+            'id': customer_id
+        }
+        
+    except Exception as e:
+        print(f"Error creating customer: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== BANK ACCOUNT ROUTES ====================
+
+class BankAccountCreate(BaseModel):
+    account_name: str
+    bank_name: str
+    account_number: str
+    account_type: str
+    ifsc_code: Optional[str] = ""
+    branch: Optional[str] = ""
+    opening_balance: Optional[float] = 0.0
+
+@router.get("/bank-accounts")
+async def get_bank_accounts():
+    """Get all bank accounts"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM bank_accounts ORDER BY created_at DESC')
+        accounts = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return {
+            'success': True,
+            'data': accounts,
+            'count': len(accounts)
+        }
+        
+    except Exception as e:
+        print(f"Error fetching bank accounts: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/bank-accounts")
+async def create_bank_account(account: BankAccountCreate):
+    """Create a new bank account"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = datetime.now().isoformat()
+        
+        cursor.execute('''
+            INSERT INTO bank_accounts 
+            (account_name, bank_name, account_number, account_type, ifsc_code, branch,
+             opening_balance, current_balance, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            account.account_name,
+            account.bank_name,
+            account.account_number,
+            account.account_type,
+            account.ifsc_code,
+            account.branch,
+            account.opening_balance,
+            account.opening_balance,
+            timestamp,
+            timestamp
+        ))
+        
+        account_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return {
+            'success': True,
+            'message': 'Bank account created successfully',
+            'id': account_id
+        }
+        
+    except Exception as e:
+        print(f"Error creating bank account: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== INVOICE ROUTES ====================
+
+class InvoiceItemCreate(BaseModel):
+    description: str
+    quantity: float
+    rate: float
+    gst_rate: float
+
+class InvoiceCreate(BaseModel):
+    customer_id: int
+    invoice_date: str
+    due_date: str
+    items: List[InvoiceItemCreate]
+    notes: Optional[str] = ""
+
+@router.get("/invoices")
+async def get_invoices():
+    """Get all invoices"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT i.*, c.name as customer_name 
+            FROM invoices i
+            LEFT JOIN customers c ON i.customer_id = c.id
+            ORDER BY i.created_at DESC
+        ''')
+        invoices = [dict(row) for row in cursor.fetchall()]
+        conn.close()
+        
+        return {
+            'success': True,
+            'data': invoices,
+            'count': len(invoices)
+        }
+        
+    except Exception as e:
+        print(f"Error fetching invoices: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/invoices")
+async def create_invoice(invoice: InvoiceCreate):
+    """Create a new invoice"""
+    try:
+        from app.invoice_numbering import generate_invoice_number
+        from app.gst_calculator import calculate_invoice_gst
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Generate invoice number
+        invoice_number = generate_invoice_number()
+        
+        # Get customer state for GST calculation
+        cursor.execute('SELECT state FROM customers WHERE id = ?', (invoice.customer_id,))
+        customer_row = cursor.fetchone()
+        customer_state = customer_row['state'] if customer_row else ""
+        
+        # Get business state from settings or use default
+        business_state = "Maharashtra"  # Default - should be from settings
+        
+        # Calculate GST
+        items_list = [item.dict() for item in invoice.items]
+        gst_calc = calculate_invoice_gst(items_list, customer_state, business_state)
+        
+        timestamp = datetime.now().isoformat()
+        
+        # Insert invoice
+        cursor.execute('''
+            INSERT INTO invoices 
+            (invoice_number, customer_id, invoice_date, due_date, subtotal, 
+             cgst, sgst, igst, total, notes, status, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', ?, ?)
+        ''', (
+            invoice_number,
+            invoice.customer_id,
+            invoice.invoice_date,
+            invoice.due_date,
+            gst_calc['subtotal'],
+            gst_calc['cgst'],
+            gst_calc['sgst'],
+            gst_calc['igst'],
+            gst_calc['total'],
+            invoice.notes,
+            timestamp,
+            timestamp
+        ))
+        
+        invoice_id = cursor.lastrowid
+        
+        # Insert invoice items
+        for item in invoice.items:
+            item_total = item.quantity * item.rate
+            cursor.execute('''
+                INSERT INTO invoice_items 
+                (invoice_id, description, quantity, rate, gst_rate, amount, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                invoice_id,
+                item.description,
+                item.quantity,
+                item.rate,
+                item.gst_rate,
+                item_total,
+                timestamp
+            ))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            'success': True,
+            'message': 'Invoice created successfully',
+            'invoice_number': invoice_number, 
+            'id': invoice_id
+        }
+        
+    except Exception as e:
+        print(f"Error creating invoice: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/invoices/{invoice_id}")
+async def get_invoice(invoice_id: int):
+    """Get invoice details with items"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get invoice
+        cursor.execute('''
+            SELECT i.*, c.name as customer_name, c.email, c.phone, c.gstin,
+                   c.address, c.city, c.state, c.pincode
+            FROM invoices i
+            LEFT JOIN customers c ON i.customer_id = c.id
+            WHERE i.id = ?
+        ''', (invoice_id,))
+        invoice = cursor.fetchone()
+        
+        if not invoice:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        
+        # Get items
+        cursor.execute('SELECT * FROM invoice_items WHERE invoice_id = ?', (invoice_id,))
+        items = [dict(row) for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        invoice_dict = dict(invoice)
+        invoice_dict['items'] = items
+        
+        return {
+            'success': True,
+            'data': invoice_dict
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error fetching invoice: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== PAYMENT ROUTES ====================
+
+class PaymentRecord(BaseModel):
+    invoice_id: int
+    payment_date: str
+    amount: float
+    payment_mode: str
+    reference: Optional[str] = ""
+
+@router.post("/payments")
+async def record_payment(payment: PaymentRecord):
+    """Record invoice payment"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = datetime.now().isoformat()
+        
+        # Insert payment
+        cursor.execute('''
+            INSERT INTO invoice_payments 
+            (invoice_id, payment_date, amount, payment_mode, reference, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            payment.invoice_id,
+            payment.payment_date,
+            payment.amount,
+            payment.payment_mode,
+            payment.reference,
+            timestamp
+        ))
+        
+        # Update invoice paid amount and status
+        cursor.execute('''
+            SELECT COALESCE(SUM(amount), 0) as total_paid, 
+                   (SELECT total FROM invoices WHERE id = ?) as invoice_total
+            FROM invoice_payments 
+            WHERE invoice_id = ?
+        ''', (payment.invoice_id, payment.invoice_id))
+        
+        result = cursor.fetchone()
+        total_paid = result['total_paid']
+        invoice_total = result['invoice_total']
+        
+        # Determine status
+        if total_paid >= invoice_total:
+            status = 'paid'
+        elif total_paid > 0:
+            status = 'partial'
+        else:
+            status = 'unpaid'
+        
+        cursor.execute('''
+            UPDATE invoices 
+            SET paid_amount = ?, status = ?, updated_at = ?
+            WHERE id = ?
+        ''', (total_paid, status, timestamp, payment.invoice_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            'success': True,
+            'message': 'Payment recorded successfully'
+        }
+        
+    except Exception as e:
+        print(f"Error recording payment: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
