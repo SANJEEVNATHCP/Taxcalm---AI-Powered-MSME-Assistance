@@ -3,11 +3,14 @@ import { motion } from 'framer-motion'
 import { Popover, Transition } from '@headlessui/react'
 import { Bell, HelpCircle, Search, Menu, FileText, TrendingUp, Info, Check } from 'lucide-react'
 import { notifications } from '../data/mockData'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const notifIconMap = { FileText, TrendingUp, Info }
 
 export default function Header({ setMobileOpen }) {
-  const unreadCount = notifications.filter((n) => n.unread).length
+  const showToast = useToast()
+  const [notifs, setNotifs] = useState(notifications)
+  const unreadCount = notifs.filter((n) => n.unread).length
 
   const [firstName, setFirstName] = useState(() => {
     try { return JSON.parse(localStorage.getItem('taxcalm_profile'))?.firstName ?? 'Arjun' } catch { return 'Arjun' }
@@ -105,7 +108,7 @@ export default function Header({ setMobileOpen }) {
                   </span>
                 </div>
                 <div>
-                  {notifications.map((n) => {
+                  {notifs.map((n) => {
                     const Icon = notifIconMap[n.icon] || Info
                     return (
                       <div
@@ -129,7 +132,7 @@ export default function Header({ setMobileOpen }) {
                   })}
                 </div>
                 <div className="px-4 py-2.5" style={{ borderTop: '1px solid var(--tc-divider)' }}>
-                  <button className="w-full text-xs font-semibold text-center py-1 transition-colors" style={{ color: 'var(--tc-accent)' }}>
+                  <button onClick={() => { setNotifs(prev => prev.map(n => ({ ...n, unread: false }))); showToast('All notifications marked as read', 'success') }} className="w-full text-xs font-semibold text-center py-1 transition-colors" style={{ color: 'var(--tc-accent)' }}>
                     Mark all as read
                   </button>
                 </div>
@@ -141,6 +144,7 @@ export default function Header({ setMobileOpen }) {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => showToast('Tip: Browse the Learn section in the sidebar for guides, courses & FAQs', 'info')}
             className="p-2 rounded-xl transition-colors"
             style={{ color: 'var(--tc-text-2)', background: 'var(--tc-btn-micro)' }}
           >

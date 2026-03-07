@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import AIChat from './components/AIChat.jsx'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
+import { ToastProvider } from './contexts/ToastContext.jsx'
 
 export default function App() {
   const [started, setStarted] = useState(false)
@@ -11,6 +12,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
+    <ToastProvider>
     <AnimatePresence mode="wait">
       {!started ? (
         <motion.div key="landing"
@@ -29,6 +31,7 @@ export default function App() {
         </motion.div>
       )}
     </AnimatePresence>
+    </ToastProvider>
     </ThemeProvider>
   )
 }

@@ -9,6 +9,7 @@ import {
   BadgeCheck, Zap,
 } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext.jsx'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'taxcalm_profile'
@@ -371,10 +372,16 @@ function BusinessTab({ data, onChange }) {
 }
 
 function SecurityTab({ data, onChange }) {
+  const showToast = useToast()
   const [showPass, setShowPass] = useState({ current: false, new: false, confirm: false })
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' })
   const [pwError, setPwError] = useState('')
   const [pwSuccess, setPwSuccess] = useState(false)
+  const [sessions, setSessions] = useState([
+    { device: 'Chrome · Windows 11', location: 'Nagpur, MH', time: 'Active now', current: true },
+    { device: 'Safari · iPhone 15',   location: 'Nagpur, MH', time: '2 hours ago', current: false },
+    { device: 'Chrome · MacBook Air', location: 'Mumbai, MH', time: '3 days ago', current: false },
+  ])
 
   const handleChangePassword = () => {
     if (!passwords.current) return setPwError('Enter your current password.')
@@ -385,12 +392,6 @@ function SecurityTab({ data, onChange }) {
     setPasswords({ current: '', new: '', confirm: '' })
     setTimeout(() => setPwSuccess(false), 3000)
   }
-
-  const sessions = [
-    { device: 'Chrome · Windows 11', location: 'Nagpur, MH', time: 'Active now', current: true },
-    { device: 'Safari · iPhone 15', location: 'Nagpur, MH', time: '2 hours ago', current: false },
-    { device: 'Chrome · MacBook Air', location: 'Mumbai, MH', time: '3 days ago', current: false },
-  ]
 
   return (
     <div className="space-y-6">
@@ -475,7 +476,7 @@ function SecurityTab({ data, onChange }) {
             <Globe className="w-4 h-4" style={{ color: 'var(--tc-accent)' }} />
             <h3 className="text-sm font-semibold" style={{ color: 'var(--tc-text-1)' }}>Active Sessions</h3>
           </div>
-          <button className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors">
+          <button onClick={() => { setSessions(prev => prev.filter(s => s.current)); showToast('All other sessions revoked', 'success') }} className="text-xs font-semibold text-red-400 hover:text-red-300 transition-colors">
             Revoke all others
           </button>
         </div>
@@ -495,7 +496,7 @@ function SecurityTab({ data, onChange }) {
             {s.current
               ? <span className="text-[11px] font-semibold text-emerald-400 px-2 py-0.5 rounded-full"
                   style={{ background: 'rgba(52,211,153,0.1)' }}>This device</span>
-              : <button className="text-[11px] font-semibold text-red-400 hover:text-red-300 transition-colors">Revoke</button>
+              : <button onClick={() => { setSessions(prev => prev.filter((_, j) => j !== i)); showToast('Session revoked', 'success') }} className="text-[11px] font-semibold text-red-400 hover:text-red-300 transition-colors">Revoke</button>
             }
           </div>
         ))}
@@ -511,7 +512,7 @@ function SecurityTab({ data, onChange }) {
             <p className="text-sm font-semibold" style={{ color: 'var(--tc-text-1)' }}>Delete Account</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--tc-text-3)' }}>Permanently delete your account and all data</p>
           </div>
-          <button className="text-xs font-semibold px-3 py-1.5 rounded-xl text-red-400 transition-all"
+          <button onClick={() => showToast('Account deletion requires email confirmation. A verification link will be sent to your registered email.', 'error')} className="text-xs font-semibold px-3 py-1.5 rounded-xl text-red-400 transition-all"
             style={{ border: '1px solid rgba(239,68,68,0.3)' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}>
@@ -574,6 +575,7 @@ function NotificationsTab({ data, onChange }) {
 }
 
 function PreferencesTab({ data, onChange }) {
+  const showToast = useToast()
   const prefs = [
     { key: 'language',   label: 'Language',       icon: Globe,     options: ['English', 'Hindi', 'Marathi', 'Tamil', 'Telugu', 'Gujarati', 'Bengali'] },
     { key: 'currency',   label: 'Currency',        icon: CreditCard, options: ['INR (₹)', 'USD ($)', 'EUR (€)'] },
@@ -618,6 +620,7 @@ function PreferencesTab({ data, onChange }) {
           <p className="text-xs mt-0.5" style={{ color: 'var(--tc-text-2)' }}>AI auto-filing, bank sync, CA connect &amp; more</p>
         </div>
         <button
+          onClick={() => showToast('TaxCalm Pro is coming soon — AI auto-filing, bank sync & CA connect', 'info')}
           className="text-xs font-semibold px-4 py-2 rounded-xl text-white flex-shrink-0 transition-opacity hover:opacity-85"
           style={{ background: 'linear-gradient(135deg,#7c3aed,#5b21b6)' }}>
           Upgrade

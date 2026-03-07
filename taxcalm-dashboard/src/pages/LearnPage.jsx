@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { BookOpen, Clock, PlayCircle, ChevronRight, Star } from 'lucide-react'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -53,6 +54,7 @@ const tagColors = {
 }
 
 export default function LearnPage() {
+  const showToast = useToast()
   return (
     <div className="space-y-6">
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
@@ -77,6 +79,7 @@ export default function LearnPage() {
           style={{ background: 'linear-gradient(135deg,#7c3aed,#5b21b6)' }}
           onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
           onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          onClick={() => showToast('Opening course: GST Fundamentals for Small Business Owners…', 'info')}
         >
           <PlayCircle className="w-4 h-4" /> Start Learning
         </button>
@@ -114,6 +117,7 @@ export default function LearnPage() {
               style={{ background: 'var(--tc-btn-micro)', border: '1px solid var(--tc-card-border)', color: 'var(--tc-text-2)' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,58,237,0.15)'; e.currentTarget.style.borderColor = 'rgba(124,58,237,0.35)'; e.currentTarget.style.color = '#a78bfa' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'var(--tc-btn-micro)'; e.currentTarget.style.borderColor = 'var(--tc-card-border)'; e.currentTarget.style.color = 'var(--tc-text-2)' }}
+              onClick={() => showToast(`Opening: ${course.title}…`, 'info')}
             >
               <span>{course.students} learners</span>
               <span className="flex items-center gap-1">Start <ChevronRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition-transform" /></span>

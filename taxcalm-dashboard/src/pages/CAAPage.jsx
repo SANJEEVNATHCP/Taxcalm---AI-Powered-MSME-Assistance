@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarClock, Video, Phone, MessageSquare, Clock, CheckCircle2, Star, Upload, FileText, ChevronLeft } from 'lucide-react'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,6 +27,8 @@ const modeLabel = { video: 'Video Call', phone: 'Phone Call', office: 'In-Office
 export default function CAAPage({ setActiveNav }) {
   const [booking, setBooking] = useState(false)
   const [booked, setBooked] = useState(false)
+  const docFileRef = useRef()
+  const showToast = useToast()
 
   return (
     <div className="space-y-6">
@@ -128,6 +131,7 @@ export default function CAAPage({ setActiveNav }) {
               </div>
             ))}
             <button className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold py-2.5 rounded-xl transition-colors hover:opacity-80 mt-2"
+              onClick={() => docFileRef.current?.click()}
               style={{ background: 'var(--tc-btn-micro)', border: '1px dashed var(--tc-input-border)', color: 'var(--tc-text-3)' }}>
               <Upload className="w-3.5 h-3.5" /> Upload Document
             </button>
@@ -155,6 +159,7 @@ export default function CAAPage({ setActiveNav }) {
           </div>
         </motion.div>
       </div>
+      <input ref={docFileRef} type="file" accept="*/*" className="hidden" onChange={e => { if (e.target.files?.[0]) showToast(`Uploading ${e.target.files[0].name}…`, 'success') }} />
     </div>
   )
 }

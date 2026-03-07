@@ -131,7 +131,7 @@ export default function IncomeTaxPage({ setActiveNav }) {
           </div>
           <div className="mt-4 pt-3 flex items-center justify-between" style={{ borderTop: '1px solid var(--tc-divider)' }}>
             <p className="text-xs" style={{ color: 'var(--tc-text-3)' }}>4th installment due in 8 days</p>
-            <button className="text-xs font-semibold transition-colors hover:opacity-70" style={{ color: 'var(--tc-accent)' }}>
+            <button onClick={() => window.open('https://www.incometax.gov.in/iec/foportal/', '_blank', 'noopener noreferrer')} className="text-xs font-semibold transition-colors hover:opacity-70" style={{ color: 'var(--tc-accent)' }}>
               Pay Now →
             </button>
           </div>

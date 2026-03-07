@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { ExternalLink, BadgeCheck } from 'lucide-react'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -53,6 +54,7 @@ const tagColors = {
 }
 
 export default function SchemesPage() {
+  const showToast = useToast()
   return (
     <div className="space-y-6">
       <motion.div variants={fadeUp} initial="hidden" animate="visible">
@@ -76,6 +78,7 @@ export default function SchemesPage() {
           style={{ background: 'rgba(255,255,255,0.15)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
           onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+          onClick={() => showToast('Showing all 4 eligible schemes below', 'info')}
         >
           Check all →
         </button>

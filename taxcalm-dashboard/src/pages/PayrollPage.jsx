@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Users, IndianRupee, Shield, ChevronDown, ChevronUp, CheckCircle2, ChevronLeft } from 'lucide-react'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -22,6 +23,7 @@ export default function PayrollPage({ setActiveNav }) {
   const [expanded, setExpanded] = useState(null)
   const [running, setRunning] = useState(false)
   const [ran, setRan] = useState(false)
+  const showToast = useToast()
 
   const handleRun = () => {
     setRunning(true)
@@ -132,7 +134,7 @@ export default function PayrollPage({ setActiveNav }) {
                     </div>
                   ))}
                 </div>
-                <button className="mt-3 text-[11px] font-semibold transition-opacity hover:opacity-70" style={{ color: 'var(--tc-accent)' }}>
+                <button onClick={() => showToast(`Generating payslip for ${emp.name}…`, 'success')} className="mt-3 text-[11px] font-semibold transition-opacity hover:opacity-70" style={{ color: 'var(--tc-accent)' }}>
                   Download Payslip →
                 </button>
               </motion.div>

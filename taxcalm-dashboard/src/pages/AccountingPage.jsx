@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { BookOpen, TrendingUp, TrendingDown, Wallet, ArrowUpRight, Plus, ChevronLeft } from 'lucide-react'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -30,6 +31,7 @@ const colorMap = {
 }
 
 export default function AccountingPage({ setActiveNav }) {
+  const showToast = useToast()
   return (
     <div className="space-y-6">
       <button
@@ -44,6 +46,7 @@ export default function AccountingPage({ setActiveNav }) {
           <p className="text-xs mt-0.5" style={{ color: 'var(--tc-text-3)' }}>Ledger, accounts summary and balance overview</p>
         </div>
         <motion.button whileTap={{ scale: 0.97 }}
+          onClick={() => showToast('New entry form coming soon', 'info')}
           className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-white transition-opacity hover:opacity-90"
           style={{ background: 'linear-gradient(135deg,#7c3aed,#5b21b6)' }}>
           <Plus className="w-3.5 h-3.5" /> New Entry
@@ -82,7 +85,7 @@ export default function AccountingPage({ setActiveNav }) {
             <h3 className="text-sm font-semibold" style={{ color: 'var(--tc-text-1)' }}>General Ledger</h3>
             <p className="text-xs mt-0.5" style={{ color: 'var(--tc-text-3)' }}>March 2026</p>
           </div>
-          <button className="flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-70"
+          <button onClick={() => showToast('Exporting ledger to Excel…', 'success')} className="flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-70"
             style={{ color: 'var(--tc-accent)' }}>
             Export <ArrowUpRight className="w-3.5 h-3.5" />
           </button>

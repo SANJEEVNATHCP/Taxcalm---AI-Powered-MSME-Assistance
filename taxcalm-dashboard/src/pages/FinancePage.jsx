@@ -1,7 +1,9 @@
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Upload, TrendingUp, TrendingDown, DollarSign, PieChart, ArrowUpRight } from 'lucide-react'
 import { GSTLineChart, ExpensesBarChart } from '../components/ChartCard.jsx'
 import { gstTrendData, expensesData } from '../data/mockData.js'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -19,6 +21,8 @@ const transactions = [
 
 export default function FinancePage() {
   const fmt = (n) => `₹${Math.abs(n).toLocaleString('en-IN')}`
+  const showToast = useToast()
+  const stmtRef = useRef()
 
   return (
     <div className="space-y-6">
@@ -71,6 +75,7 @@ export default function FinancePage() {
           </div>
           <button
             className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+            onClick={() => stmtRef.current?.click()}
             style={{ color: 'var(--tc-text-2)', background: 'var(--tc-btn-micro)', border: '1px solid var(--tc-input-border)' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--tc-card-border)'}
             onMouseLeave={e => e.currentTarget.style.background = 'var(--tc-btn-micro)'}
@@ -105,11 +110,13 @@ export default function FinancePage() {
         </div>
 
         <div className="px-5 py-3" style={{ borderTop: '1px solid var(--tc-divider)' }}>
-          <button className="flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300 transition-colors">
+          <button onClick={() => showToast('Showing all transactions', 'info')} className="flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300 transition-colors">
             View all transactions <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </motion.div>
+      <input ref={stmtRef} type="file" accept=".csv,.xlsx,.pdf" className="hidden"
+        onChange={e => { if (e.target.files?.[0]) showToast(`Importing ${e.target.files[0].name}…`, 'success') }} />
     </div>
   )
 }

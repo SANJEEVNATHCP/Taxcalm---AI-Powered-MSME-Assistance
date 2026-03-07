@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FileCheck, Clock, AlertCircle, CheckCircle2, Upload, ArrowUpRight, Calendar, ChevronRight, ChevronLeft } from 'lucide-react'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -38,6 +39,7 @@ const colorMap = {
 
 export default function GSTFilingPage({ setActiveNav }) {
   const [selected, setSelected] = useState(null)
+  const showToast = useToast()
 
   return (
     <div className="space-y-6">
@@ -81,7 +83,7 @@ export default function GSTFilingPage({ setActiveNav }) {
         style={{ background: 'var(--tc-card-bg)', border: '1px solid var(--tc-card-border)' }}>
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--tc-divider)' }}>
           <h3 className="text-sm font-semibold" style={{ color: 'var(--tc-text-1)' }}>Filing Tracker</h3>
-          <button className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
+          <button onClick={() => showToast('Showing complete filing history', 'info')} className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
             style={{ color: 'var(--tc-accent)' }}>
             Full history <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
@@ -160,7 +162,7 @@ export default function GSTFilingPage({ setActiveNav }) {
           <p className="text-sm font-semibold" style={{ color: 'var(--tc-text-1)' }}>ITC Reconciliation</p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--tc-text-3)' }}>Match GSTR-2B auto-drafted credits with your purchase register to maximise legitimate ITC claims.</p>
         </div>
-        <button className="text-xs font-semibold px-4 py-2 rounded-xl flex-shrink-0 transition-colors"
+        <button onClick={() => showToast('ITC reconciliation started — 98% match rate (demo)', 'success')} className="text-xs font-semibold px-4 py-2 rounded-xl flex-shrink-0 transition-colors"
           style={{ background: 'rgba(124,58,237,0.2)', color: '#a78bfa', border: '1px solid rgba(124,58,237,0.3)' }}
           onMouseEnter={e => e.currentTarget.style.background='rgba(124,58,237,0.3)'}
           onMouseLeave={e => e.currentTarget.style.background='rgba(124,58,237,0.2)'}>

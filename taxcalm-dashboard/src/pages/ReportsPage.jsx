@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Download, TrendingUp, BarChart2, DollarSign, Receipt, RefreshCw, Calendar, ChevronLeft } from 'lucide-react'
+import { useToast } from '../contexts/ToastContext.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -26,6 +27,7 @@ const recentReports = [
 export default function ReportsPage({ setActiveNav }) {
   const [generating, setGenerating] = useState(null)
   const [period, setPeriod] = useState('monthly')
+  const showToast = useToast()
 
   const handleGenerate = (id) => {
     setGenerating(id)
@@ -121,7 +123,7 @@ export default function ReportsPage({ setActiveNav }) {
               style={{ background: 'var(--tc-btn-micro)', color: 'var(--tc-text-3)' }}>
               {report.format}
             </span>
-            <button className="transition-opacity hover:opacity-70 flex-shrink-0"
+            <button onClick={() => showToast(`Downloading ${report.name}…`, 'success')} className="transition-opacity hover:opacity-70 flex-shrink-0"
               style={{ color: 'var(--tc-text-3)' }}>
               <Download className="w-4 h-4" />
             </button>
