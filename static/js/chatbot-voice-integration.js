@@ -101,7 +101,7 @@
             }
             
             addChatMessage('system', errorMsg);
-            addChatMessage('system', '💡 Need help? Visit: http://localhost:8000/static/microphone-setup.html');
+            addChatMessage('system', '💡 Need help? Visit: http://localhost:1000/static/microphone-setup.html');
             return;
         }
 

@@ -68,6 +68,7 @@ function initDarkMode() {
 }
 
 function enableDarkMode() {
+    document.documentElement.classList.remove('rose');
     document.documentElement.classList.add('dark');
     document.body.setAttribute('data-theme', 'dark');
     localStorage.setItem('darkMode', 'true');
@@ -76,7 +77,13 @@ function enableDarkMode() {
 
 function disableDarkMode() {
     document.documentElement.classList.remove('dark');
-    document.body.setAttribute('data-theme', 'light');
+    const savedTheme = localStorage.getItem('taxcalm_theme');
+    if (savedTheme === 'rose') {
+        document.documentElement.classList.add('rose');
+        document.body.setAttribute('data-theme', 'rose');
+    } else {
+        document.body.setAttribute('data-theme', 'light');
+    }
     localStorage.setItem('darkMode', 'false');
     if (darkModeToggle) darkModeToggle.textContent = '🌙';
 }

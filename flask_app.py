@@ -470,8 +470,8 @@ if __name__ == '__main__':
     print("TaxClam Server (Flask)")
     print("=" * 60)
     print("Starting server...")
-    print("Open browser: http://localhost:8000")
+    print("Open browser: http://localhost:1000")
     print("Press Ctrl+C to stop")
     print("=" * 60 + "\n")
     
-    app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=1000, debug=False, use_reloader=False)

@@ -470,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Internal: apply theme class to <html> ─────────────────────────────────
     function _applyTheme(theme) {
         const html = document.documentElement;
-        html.classList.remove('dark', 'light');
+        html.classList.remove('dark', 'light', 'rose');
         if (theme === 'auto') {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             html.classList.add(prefersDark ? 'dark' : 'light');

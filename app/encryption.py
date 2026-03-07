@@ -16,7 +16,7 @@ ENCRYPTION_KEY_ENV = os.getenv('ENCRYPTION_KEY')
 
 if not ENCRYPTION_KEY_ENV:
     # Generate a new key for development (in production, this should be in .env)
-    print("⚠️ WARNING: No ENCRYPTION_KEY found in environment. Generating temporary key.")
+    print("WARNING: No ENCRYPTION_KEY found in environment. Generating temporary key.")
     print("   For production, set ENCRYPTION_KEY in your .env file.")
     import secrets
     ENCRYPTION_KEY_ENV = base64.b64encode(secrets.token_bytes(32)).decode('utf-8')
@@ -27,7 +27,7 @@ try:
     if len(MASTER_KEY) != 32:
         raise ValueError("Encryption key must be 32 bytes (256 bits)")
 except Exception as e:
-    print(f"❌ Invalid ENCRYPTION_KEY in environment: {e}")
+    print(f"ERROR: Invalid ENCRYPTION_KEY in environment: {e}")
     print("   Generating new key for this session...")
     import secrets
     MASTER_KEY = secrets.token_bytes(32)

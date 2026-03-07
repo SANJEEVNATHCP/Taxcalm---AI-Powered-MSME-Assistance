@@ -429,9 +429,19 @@ async def forgot_password(request: ForgotPasswordRequest):
         conn.commit()
         conn.close()
         
-        # TODO: Send email with reset link
-        # reset_link = f"http://localhost:8000/reset-password.html?token={reset_token}"
-        # send_email(request.email, "Password Reset", f"Click here to reset: {reset_link}")
+        # Send password reset email
+        try:
+            from app.email_service import send_password_reset_email
+            reset_link = os.getenv('APP_URL', 'http://localhost:1000') + f"/reset-password.html?token={reset_token}"
+            send_password_reset_email(
+                to_email=request.email,
+                username=username,
+                reset_link=reset_link
+            )
+        except Exception as email_error:
+            # Log error but don't reveal to user for security
+            import logging
+            logging.error(f"Failed to send password reset email: {email_error}")
         
         return AuthResponse(
             success=True,

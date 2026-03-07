@@ -2,7 +2,7 @@
 """
 ⭐ UNIFIED SERVER - All Services in One
 Consolidates Flask, FastAPI, Finance, Zoom, RAG, and Chat features
-Runs on a single port: 8000
+Runs on a single port: 1000
 """
 
 from fastapi import FastAPI, File, UploadFile, Request, HTTPException
@@ -110,10 +110,33 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# ==================== LOGGING SETUP ====================
+
+# Initialize centralized logging
+try:
+    from app.logging_config import setup_logging, get_logger
+    setup_logging(log_level=os.getenv('LOG_LEVEL', 'INFO'))
+    logger = get_logger(__name__)
+    logger.info("Logging system initialized")
+except Exception as e:
+    print(f"⚠️ Failed to initialize logging: {e}")
+    import logging
+    logger = logging.getLogger(__name__)
+
+# ==================== ERROR HANDLERS ====================
+
+# Setup comprehensive error handling
+try:
+    from app.error_handlers import setup_error_handlers
+    setup_error_handlers(app)
+    logger.info("Error handlers configured")
+except Exception as e:
+    logger.warning(f"Failed to setup error handlers: {e}")
+
 # ==================== CORS MIDDLEWARE ====================
 
 # Security: Restrict CORS to specific origins only
-ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:8000,http://127.0.0.1:8000').split(',')
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', 'http://localhost:1000,http://127.0.0.1:1000').split(',')
 
 app.add_middleware(
     CORSMiddleware,
@@ -1655,17 +1678,51 @@ def verify_api_key(api_key: str) -> bool:
 # ==================== HEALTH CHECK ====================
 
 @app.get("/api/health")
-async def api_health():
-    """API health check"""
-    return {
-        "status": "ok",
-        "services": {
-            "finance": "active",
-            "gst_calculator": "active",
-            "zoom": "active",
-            "rag": "active" if RAG_AVAILABLE else "inactive"
+@limiter.limit("100/minute")
+async def api_health(request: Request, detailed: bool = False):
+    """
+    API health check endpoint
+    
+    Args:
+        detailed: If True, returns comprehensive health status
+    
+    Returns:
+        Quick status or detailed health report
+    """
+    try:
+        from app.health_checks import get_health_checker
+        
+        health_checker = get_health_checker()
+        
+        if detailed:
+            # Comprehensive health check
+            return health_checker.run_all_checks()
+        else:
+            # Quick status check
+            return health_checker.get_quick_status()
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Health check failed"
         }
-    }
+
+
+@app.get("/api/health/detailed")
+@limiter.limit("30/minute")
+async def api_health_detailed(request: Request):
+    """Detailed health check with all system metrics"""
+    try:
+        from app.health_checks import get_health_checker
+        return get_health_checker().run_all_checks()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/health")
+async def health():
+    """Simple health check for load balancers"""
+    return {"status": "ok"}
 
 # ==================== MAIN ====================
 
@@ -1679,15 +1736,15 @@ if __name__ == "__main__":
     print("✅ RAG System" if RAG_AVAILABLE else "⚠️  RAG System (Disabled)")
     print("✅ Static Files Server")
     print("=" * 70)
-    print("📍 Server running on: http://localhost:8000")
-    print("📍 API Documentation: http://localhost:8000/docs")
-    print("📍 Alternative Docs: http://localhost:8000/redoc")
+    print("📍 Server running on: http://localhost:1000")
+    print("📍 API Documentation: http://localhost:1000/docs")
+    print("📍 Alternative Docs: http://localhost:1000/redoc")
     print("=" * 70 + "\n")
     
     uvicorn.run(
         "unified_server:app",
         host="0.0.0.0",
-        port=8000,
+        port=1000,
         reload=False,
         log_level="info"
     )

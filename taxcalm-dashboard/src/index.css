@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Theme: Dark (default) ── */
+:root, html.dark {
+  --bg-app: #080814;
+  --text-app: #e2e8f0;
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --primary: #7c3aed;
+  --primary-light: #a78bfa;
+
+  /* tc design tokens - dark */
+  --tc-app-bg:         #080814;
+  --tc-header-bg:      rgba(8,8,20,0.88);
+  --tc-sidebar-bg:     rgba(10,10,26,0.98);
+  --tc-sidebar-border: rgba(255,255,255,0.07);
+  --tc-card-bg:        rgba(255,255,255,0.04);
+  --tc-card-border:    rgba(255,255,255,0.08);
+  --tc-text-1:         rgba(255,255,255,0.92);
+  --tc-text-2:         rgba(255,255,255,0.6);
+  --tc-text-3:         rgba(255,255,255,0.35);
+  --tc-text-4:         rgba(255,255,255,0.22);
+  --tc-input-bg:       rgba(255,255,255,0.06);
+  --tc-input-border:   rgba(255,255,255,0.1);
+  --tc-input-text:     rgba(255,255,255,0.8);
+  --tc-accent:         #a78bfa;
+  --tc-acc-bg:         rgba(124,58,237,0.15);
+  --tc-acc-border:     rgba(124,58,237,0.4);
+  --tc-nav-active-bg:  linear-gradient(135deg,#7c3aed,#5b21b6);
+  --tc-nav-active:     #c4b5fd;
+  --tc-nav-inactive:   rgba(255,255,255,0.45);
+  --tc-btn-micro:      rgba(255,255,255,0.06);
+  --tc-divider:        rgba(255,255,255,0.07);
+  --tc-orb-1:          rgba(124,58,237,0.12);
+  --tc-orb-2:          rgba(91,33,182,0.08);
+  --tc-logo-shadow:    0 0 16px rgba(124,58,237,0.5);
+  --tc-logo-grad:      linear-gradient(135deg,#7c3aed,#5b21b6);
+  --tc-notif-bg:       rgba(14,14,32,0.98);
+  --tc-notif-border:   rgba(255,255,255,0.1);
+}
+
+/* ── Theme: White & Rose ── */
+html.rose {
+  --bg-app: #ffffff;
+  --text-app: #111827;
+  --card-bg: rgba(244,63,94,0.04);
+  --card-border: rgba(244,63,94,0.15);
+  --primary: #F43F5E;
+  --primary-light: #FB7185;
+}
+
+/* ── Theme: Light ── */
+html.light {
+  --bg-app: #f8fafc;
+  --text-app: #111827;
+  --card-bg: rgba(0,0,0,0.03);
+  --card-border: rgba(0,0,0,0.08);
+  --primary: #FFD700;
+  --primary-light: #FFE55C;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-app, #080814);
+  color: var(--text-app, #e2e8f0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.03);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(139,92,246,0.35);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139,92,246,0.6);
+}
+
+/* Glass card base */
+.glass {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(16px);
+}
+
+/* Violet glow utility */
+.glow-violet {
+  box-shadow: 0 0 24px rgba(124,58,237,0.25), 0 4px 16px rgba(0,0,0,0.4);
+}

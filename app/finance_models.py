@@ -8,7 +8,6 @@ import os
 from datetime import datetime
 import json
 import logging
-from cryptography.fernet import Fernet
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -17,21 +16,34 @@ logger = logging.getLogger(__name__)
 # Database path
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), '..', 'finance.db')
 
-# Encryption key (should be stored securely in production)
-ENCRYPTION_KEY = Fernet.generate_key()
-cipher = Fernet(ENCRYPTION_KEY)
-
-def encrypt_data(data):
-    """Encrypt sensitive data."""
-    if data:
-        return cipher.encrypt(data.encode()).decode()
-    return None
-
-def decrypt_data(data):
-    """Decrypt sensitive data."""
-    if data:
-        return cipher.decrypt(data.encode()).decode()
-    return None
+# Use centralized encryption module for consistency
+try:
+    from app.encryption import encrypt_field, decrypt_field
+    def encrypt_data(data):
+        """Encrypt sensitive data using centralized encryption."""
+        return encrypt_field(data)
+    
+    def decrypt_data(data):
+        """Decrypt sensitive data using centralized encryption."""
+        return decrypt_field(data)
+    logger.info("Using centralized encryption module")
+except ImportError as e:
+    logger.warning(f"Could not import centralized encryption: {e}. Using fallback.")
+    from cryptography.fernet import Fernet
+    ENCRYPTION_KEY = Fernet.generate_key()
+    cipher = Fernet(ENCRYPTION_KEY)
+    
+    def encrypt_data(data):
+        """Encrypt sensitive data (fallback)."""
+        if data:
+            return cipher.encrypt(data.encode()).decode()
+        return None
+    
+    def decrypt_data(data):
+        """Decrypt sensitive data (fallback)."""
+        if data:
+            return cipher.decrypt(data.encode()).decode()
+        return None
 
 def get_db_connection():
     """Get database connection with context management."""

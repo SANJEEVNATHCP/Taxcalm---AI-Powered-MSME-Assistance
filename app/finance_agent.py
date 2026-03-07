@@ -12,11 +12,16 @@ from datetime import datetime
 class FinanceAgent:
     """
     Agent that executes finance operations by calling internal API endpoints
+    Integrates with authentication system for user-specific operations
     """
     
-    def __init__(self, base_url: str = "http://localhost:8000"):
+    def __init__(self, base_url: str = "http://localhost:1000", user_id: Optional[int] = None, auth_token: Optional[str] = None):
         self.base_url = base_url
-        self.user_id = 1  # Default user ID (TODO: integrate with auth system)
+        self.user_id = user_id or 1  # Use provided user_id or default to 1 for development
+        self.auth_token = auth_token  # JWT token for authenticated requests
+        self.headers = {}
+        if auth_token:
+            self.headers['Authorization'] = f'Bearer {auth_token}'
     
     async def execute_action(self, action: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """

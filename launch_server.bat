@@ -11,6 +11,6 @@ REM Wait for server to initialize
 timeout /t 3 /nobreak >nul
 
 REM Open browser to TaxClam web interface
-start http://localhost:8000
+start http://localhost:1000
 
 exit

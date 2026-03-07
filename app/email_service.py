@@ -162,6 +162,67 @@ class EmailService:
             results["error"] = f"Failed to send to: {', '.join(results['failed'])}"
         
         return results
+    
+    def send_password_reset_email(self, to_email, username, reset_link):
+        """
+        Send password reset email
+        
+        Args:
+            to_email: Recipient email
+            username: User's username
+            reset_link: Password reset link
+        
+        Returns:
+            bool: True if sent successfully
+        """
+        email_html = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; }}
+        .content {{ background: #f9f9f9; padding: 20px; border-radius: 0 0 8px 8px; }}
+        .button {{ display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; }}
+        .warning {{ background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 15px 0; }}
+        .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>🔐 Password Reset Request</h2>
+        </div>
+        <div class="content">
+            <p>Hi <strong>{username}</strong>,</p>
+            <p>We received a request to reset your password for your TAXCLAM account.</p>
+            
+            <p>Click the button below to reset your password:</p>
+            <div style="text-align: center;">
+                <a href="{reset_link}" class="button">Reset Password</a>
+            </div>
+            
+            <p>Or copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; background: white; padding: 10px; border-radius: 4px;"><a href="{reset_link}">{reset_link}</a></p>
+            
+            <div class="warning">
+                <strong>⚠️ Important:</strong> This link will expire in 1 hour and can only be used once.
+            </div>
+            
+            <p><strong>Didn't request this?</strong> You can safely ignore this email. Your password will not be changed.</p>
+            
+            <p>Best regards,<br><strong>TAXCLAM Security Team</strong></p>
+        </div>
+        <div class="footer">
+            <p>This is an automated security email from TAXCLAM. Please do not reply.</p>
+            <p>If you didn't request a password reset, please contact support immediately.</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        return self.send_email(to_email, "Password Reset Request - TAXCLAM", email_html)
 
 
 # Global instance
@@ -173,3 +234,8 @@ def get_email_service():
     if _email_service is None:
         _email_service = EmailService()
     return _email_service
+
+def send_password_reset_email(to_email, username, reset_link):
+    """Convenience function to send password reset email"""
+    service = get_email_service()
+    return service.send_password_reset_email(to_email, username, reset_link)

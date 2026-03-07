@@ -128,6 +128,179 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// ==================== Floating Action Button (FAB) Menu ====================
+const mainFab = document.getElementById('mainFab');
+const fabMenu = document.getElementById('fabMenu');
+const fabIcon = document.getElementById('fabIcon');
+let fabMenuOpen = false;
+
+if (mainFab && fabMenu) {
+    mainFab.addEventListener('click', () => {
+        fabMenuOpen = !fabMenuOpen;
+        
+        if (fabMenuOpen) {
+            fabMenu.classList.remove('fab-menu-hidden');
+            mainFab.classList.add('open');
+            fabIcon.textContent = '✕';
+            
+            // Animate menu items in
+            const items = fabMenu.querySelectorAll('button');
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.8) translateX(20px)';
+                    setTimeout(() => {
+                        item.style.transition = 'all 0.3s ease';
+                        item.style.opacity = '1';
+                        item.style.transform = 'scale(1) translateX(0)';
+                    }, 10);
+                }, index * 50);
+            });
+        } else {
+            mainFab.classList.remove('open');
+            fabIcon.textContent = '✨';
+            
+            // Animate menu items out
+            const items = fabMenu.querySelectorAll('button');
+            items.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'scale(0.8) translateX(20px)';
+                }, index * 30);
+            });
+            
+            setTimeout(() => {
+                fabMenu.classList.add('fab-menu-hidden');
+            }, items.length * 30 + 200);
+        }
+    });
+
+    // Handle FAB action buttons
+    const fabActions = fabMenu.querySelectorAll('.fab-action');
+    fabActions.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const action = button.getAttribute('data-action');
+            
+            // Close the FAB menu
+            fabMenuOpen = false;
+            mainFab.classList.remove('open');
+            fabIcon.textContent = '✨';
+            fabMenu.classList.add('fab-menu-hidden');
+            
+            // Handle each action
+            switch(action) {
+                case 'voice':
+                    const voiceBtn = document.getElementById('voiceInputBtn');
+                    if (voiceBtn) voiceBtn.click();
+                    break;
+                case 'knowledge':
+                    const ragToggle = document.getElementById('toggleRagSection');
+                    if (ragToggle) ragToggle.click();
+                    break;
+                case 'clear':
+                    if (confirm('Clear all chat messages?')) {
+                        const chatMessages = document.getElementById('chatMessages');
+                        if (chatMessages) chatMessages.innerHTML = '';
+                    }
+                    break;
+                case 'import':
+                    window.importChatHistory();
+                    break;
+                case 'export':
+                    window.exportChatHistory();
+                    break;
+            }
+        });
+    });
+}
+
+// Hidden file input for import
+const importFileInput = document.createElement('input');
+importFileInput.type = 'file';
+importFileInput.accept = '.txt,.json';
+importFileInput.style.display = 'none';
+document.body.appendChild(importFileInput);
+
+// Import Chat History Function
+window.importChatHistory = function() {
+    importFileInput.click();
+};
+
+importFileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const content = event.target.result;
+        const chatMessages = document.getElementById('chatMessages');
+        
+        if (!chatMessages) return;
+        
+        // Clear existing messages
+        if (confirm('Import will replace current chat. Continue?')) {
+            chatMessages.innerHTML = '';
+            
+            // Parse and display imported messages
+            const lines = content.split('\n\n');
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed) {
+                    // Determine if it's a user or assistant message
+                    const isUser = trimmed.startsWith('You:') || trimmed.startsWith('User:');
+                    const messageText = trimmed.replace(/^(You:|User:|Assistant:|AI:)\s*/, '');
+                    
+                    if (messageText) {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = isUser ? 'chat-message chat-message-user' : 'chat-message chat-message-assistant';
+                        messageDiv.textContent = messageText;
+                        chatMessages.appendChild(messageDiv);
+                    }
+                }
+            });
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            if (window.toast) {
+                window.toast.success('Chat imported successfully!');
+            }
+        }
+    };
+    
+    reader.readAsText(file);
+    importFileInput.value = ''; // Reset input
+});
+
+// Export Chat History Function
+window.exportChatHistory = function() {
+    const messages = document.querySelectorAll('#chatMessages .chat-message, #chatMessages .glass');
+    const chatHistory = [];
+    
+    messages.forEach(msg => {
+        const text = msg.textContent.trim();
+        if (text && text !== '' && !text.includes('Listening...')) {
+            chatHistory.push(text);
+        }
+    });
+    
+    const chatContent = chatHistory.join('\n\n');
+    const blob = new Blob([chatContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TaxCalm_Chat_${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    // Show success message
+    if (window.toast) {
+        window.toast.success('Chat exported successfully!');
+    }
+};
+
 // ==================== RAG Knowledge Base Integration ====================
 // Initialized in window.addEventListener('load') below
 

@@ -9,9 +9,9 @@ echo.
 
 cd /d "%~dp0"
 
-REM Start Flask Server (Port 8000)
-echo [1/3] Starting Flask Server on port 8000...
-start "TaxClam - Flask Server (8000)" cmd /k ".\.venv\Scripts\python.exe" run_flask_server.py
+REM Start Flask Server (Port 1000)
+echo [1/3] Starting Flask Server on port 1000...
+start "TaxClam - Flask Server (1000)" cmd /k ".\.venv\Scripts\python.exe" run_flask_server.py
 
 timeout /t 2 /nobreak >nul
 
@@ -33,8 +33,8 @@ echo   All servers starting...
 echo   Opening web browser...
 echo ========================================
 echo.
-echo   TaxCalm Server:  http://localhost:8000  (Recommended)
-echo   All servers now use port 8000
+echo   TaxCalm Server:  http://localhost:1000  (Recommended)
+echo   All servers now use port 1000
 echo.
 echo.
 echo   Press any key to open browser...

@@ -32,3 +32,6 @@ pandas==2.1.4
 reportlab==4.0.7
 fuzzywuzzy==0.18.0
 python-Levenshtein==0.23.0
+
+# System Monitoring
+psutil==5.9.8

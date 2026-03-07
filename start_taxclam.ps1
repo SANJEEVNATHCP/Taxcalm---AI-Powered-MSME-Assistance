@@ -9,8 +9,8 @@ Write-Host ""
 # Change to script directory
 Set-Location $PSScriptRoot
 
-# Start Flask Server (Port 8000)
-Write-Host "[1/3] Starting Flask Server on port 8000..." -ForegroundColor Green
+# Start Flask Server (Port 1000)
+Write-Host "[1/3] Starting Flask Server on port 1000..." -ForegroundColor Green
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "& '.\.venv\Scripts\python.exe' run_flask_server.py" -WindowStyle Normal
 
 Start-Sleep -Seconds 2
@@ -31,8 +31,8 @@ Write-Host "  All servers starting..." -ForegroundColor Yellow
 Write-Host "  Opening web browser..." -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "  TaxCalm Server:  http://localhost:8000  (Recommended)" -ForegroundColor Green
-Write-Host "  All servers now use port 8000" -ForegroundColor White
+Write-Host "  TaxCalm Server:  http://localhost:1000  (Recommended)" -ForegroundColor Green
+Write-Host "  All servers now use port 1000" -ForegroundColor White
 Write-Host "" -ForegroundColor White
 Write-Host ""
 Write-Host "  Waiting for servers to start..." -ForegroundColor Yellow

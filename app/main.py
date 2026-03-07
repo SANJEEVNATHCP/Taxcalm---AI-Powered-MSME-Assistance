@@ -14,6 +14,7 @@ import json
 
 # Import routers
 from .finance_router import router as finance_router
+from .blender_api import router as blender_router
 
 # Import RAG system
 try:
@@ -1028,6 +1029,8 @@ async def rag_delete_document(doc_id: str):
 # Include routers
 print("Including finance router...")
 app.include_router(finance_router)
+print("Including blender API router...")
+app.include_router(blender_router)
 print("Routers included successfully")
 
 # Mount static files (CSS, JS, images)
