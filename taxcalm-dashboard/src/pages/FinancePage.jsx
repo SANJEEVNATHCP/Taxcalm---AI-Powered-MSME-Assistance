@@ -4,6 +4,7 @@ import { Upload, TrendingUp, TrendingDown, DollarSign, PieChart, ArrowUpRight } 
 import { GSTLineChart, ExpensesBarChart } from '../components/ChartCard.jsx'
 import { gstTrendData, expensesData } from '../data/mockData.js'
 import { useToast } from '../contexts/ToastContext.jsx'
+import MultiFormatDataInput from '../components/MultiFormatDataInput.jsx'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -23,6 +24,29 @@ export default function FinancePage() {
   const fmt = (n) => `₹${Math.abs(n).toLocaleString('en-IN')}`
   const showToast = useToast()
   const stmtRef = useRef()
+  const [txList, setTxList] = useState(transactions)
+
+  const handleDataSubmit = (data, format) => {
+    try {
+      const newTxs = data.map((item, idx) => {
+        // Parse different formats
+        let tx = {
+          id: txList.length + idx + 1,
+          date: item.date || item[0] || new Date().toISOString().split('T')[0],
+          desc: item.description || item.desc || item[1] || 'Manual Entry',
+          amount: parseFloat(item.amount || item[2] || 0),
+          category: item.category || item[3] || 'Other',
+          type: item.type || item[4] || (parseFloat(item.amount || item[2] || 0) > 0 ? 'credit' : 'debit'),
+        }
+        return tx
+      })
+      
+      setTxList([...newTxs, ...txList])
+      showToast?.(`Added ${newTxs.length} transaction(s)`, 'success')
+    } catch (e) {
+      showToast?.(`Error: ${e.message}`, 'error')
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -64,6 +88,9 @@ export default function FinancePage() {
         <ExpensesBarChart data={expensesData} />
       </div>
 
+      {/* Multi-Format Data Input */}
+      <MultiFormatDataInput onDataSubmit={handleDataSubmit} dataType="transactions" />
+
       {/* Recent Transactions */}
       <motion.div variants={fadeUp} custom={5} initial="hidden" animate="visible"
         className="rounded-2xl overflow-hidden"
@@ -85,10 +112,10 @@ export default function FinancePage() {
         </div>
 
         <div>
-          {transactions.map((tx, i) => (
+          {txList.map((tx, i) => (
             <motion.div key={tx.id} variants={fadeUp} custom={i * 0.5} initial="hidden" animate="visible"
               className="flex items-center gap-4 px-5 py-3.5 transition-colors"
-              style={{ borderBottom: i < transactions.length - 1 ? '1px solid var(--tc-divider)' : 'none' }}
+              style={{ borderBottom: i < txList.length - 1 ? '1px solid var(--tc-divider)' : 'none' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--tc-btn-micro)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
