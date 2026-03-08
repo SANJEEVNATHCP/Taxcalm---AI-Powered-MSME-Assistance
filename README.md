@@ -2,6 +2,8 @@
 
 **Your comprehensive, privacy-first companion for MSME GST management.**
 
+> 🎯 **Frontend-First Application**: This repository contains the modern React + Vite web application. All data is stored securely in your browser - no backend required!
+
 The **TaxClam** is a web-based application designed to help Micro, Small, and Medium Enterprises (MSMEs) in India manage their Goods and Services Tax (GST) obligations without the stress. It combines a powerful calculator with compliance tools, financial insights, and expert-level resources—all without requiring a login or storing sensitive data on a server.
 
 ---
@@ -94,16 +96,6 @@ taxcalm-dashboard/
 ├── tailwind.config.js      # Tailwind CSS config
 └── package.json            # Dependencies
 
-legacy_backend/             # Archived backend code
-├── app/                    # Flask application
-├── blender_addon/          # Blender integration (legacy)
-├── static_old/             # Old static files
-├── rag_data/               # RAG system data
-├── flask_app.py
-├── unified_server.py
-├── requirements.txt
-└── ...
-
 .gitignore
 README.md                   # This file
 ```
@@ -155,9 +147,11 @@ npm run build
 
 This creates an optimized build in the `dist/` folder.
 
-### Running Legacy Backend (Optional)
+### Running Legacy Backend (Optional - Local Only)
 
-If you need to run the legacy Flask backend for API integration:
+> **Note**: The legacy backend is NOT included in the GitHub repository. It's kept locally for development only.
+
+If you have the `legacy_backend/` folder available locally:
 
 1.  **Navigate to legacy backend**:
     ```bash
@@ -173,6 +167,7 @@ If you need to run the legacy Flask backend for API integration:
     ```bash
     python flask_app.py
     ```
+    The server will run on `http://localhost:8000`
 
 ## 📦 Building & Deployment
 
@@ -188,26 +183,36 @@ npm run preview  # Preview the production build locally
 ```
 
 ### Environment Setup
-Create a `.env` file in `taxcalm-dashboard/` if you need to configure any environment variables:
+
+Create a `.env` file in `taxcalm-dashboard/` for optional configuration:
+
 ```
-VITE_API_URL=http://localhost:8000  # For legacy backend integration
+# Optional: Only needed if running legacy Flask backend locally
+VITE_API_URL=http://localhost:8000
 ```
+
+The frontend works perfectly **without** this - all data is stored locally in the browser.
 
 ---
 
-## 🗂️ Legacy Backend
+## 🗂️ Legacy Backend (Local Only)
 
-The original Flask backend and related integrations (Blender addon, RAG system, etc.) have been archived in the `legacy_backend/` folder for reference and potential future use.
+> **⚠️ Important**: The `legacy_backend/` folder is **NOT** included in the GitHub repository. It's archived locally on the development machine for reference and future development.
 
-**Legacy components:**
+**What was in the legacy backend:**
 - Flask REST API
 - Zoom scheduler integration  
 - Finance calculations engine
 - Blender addon for 3D visualizations
 - RAG (Retrieval-Augmented Generation) system
 - Database configurations
+- Old static files (HTML/CSS/JS)
 
-To use legacy code, refer to `legacy_backend/README` (if available) or documentation in that folder.
+### Why was it removed from GitHub?
+- Reduces repository size significantly (~60MB+)
+- Keeps the repository focused on the current Vite frontend
+- Legacy code is available locally for developers who need it
+- Frontend app is fully functional as a standalone web application
 
 ---
 
