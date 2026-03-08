@@ -33,14 +33,15 @@ The **TaxClam** is a web-based application designed to help Micro, Small, and Me
 
 ## 🛠️ Tech Stack
 
-*   **Backend**: Python (Flask)
-*   **Frontend**: HTML5, Vanilla JavaScript
+**Current (Frontend-First):**
+*   **Frontend**: React 18 + Vite
+*   **Build Tool**: Vite (Lightning-fast bundler)
 *   **Styling**: Tailwind CSS
-*   **Libraries**:
-    *   `Chart.js` (Visualizations)
-    *   `html2pdf.js` (PDF Generation)
-    *   `GPU.js` (Hardware acceleration for AMD/NVIDIA/Intel GPUs)
-*   **Infrastructure**: Desktop-ready, Docker-compatible
+*   **UI Components**: Custom React components
+*   **State Management**: React Context API
+
+**Legacy (Archived):**
+*   **Backend**: Python (Flask) - *in `legacy_backend/` folder*
 *   **Hardware Acceleration**: AMD Radeon, NVIDIA GeForce, Intel integrated graphics support
 
 ---
@@ -67,71 +68,158 @@ Visit `/static/gpu-demo.html` to test GPU acceleration and see your hardware spe
 ## 📂 Project Structure
 
 ```
-MSME's andvanced/
-├── app/
-│   ├── finance_routes.py       # Finance & Compliance logic
-│   ├── zoom_routes.py          # Zoom Meeting Scheduler logic
-│   └── ...
-├── static/
-│   ├── css/
-│   │   └── style.css           # Custom styles & Dark mode
-│   ├── js/
-│   │   ├── features.js         # Core application logic (History, Charts, PWA)
-│   │   └── calculator.js       # Basic calculation logic
-│   ├── index.html              # Main Dashboard
-│   ├── zoom-scheduler.html     # Meeting Scheduler Interface
-│   ├── manifest.json           # PWA Manifest
-│   └── service-worker.js       # Offline support
-├── flask_app.py                # Main Application Entry Point
-├── requirements.txt            # Python dependencies
-└── README.md                   # This file
+taxcalm-dashboard/
+├── src/
+│   ├── components/          # React components
+│   │   ├── Header.jsx
+│   │   ├── Sidebar.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── IntroAnimation.jsx
+│   │   ├── BulkDataImporter.jsx
+│   │   └── ...
+│   ├── pages/               # Page components
+│   │   ├── FinancePage.jsx
+│   │   ├── TrendsPage.jsx
+│   │   ├── GSTCalculator.jsx
+│   │   └── ...
+│   ├── contexts/            # React contexts
+│   │   ├── ThemeContext.jsx
+│   │   └── ToastContext.jsx
+│   ├── App.jsx              # Main app component
+│   ├── main.jsx             # Entry point
+│   └── index.css           # Global styles
+├── public/
+│   └── audio/              # Media assets
+├── vite.config.js          # Vite configuration
+├── tailwind.config.js      # Tailwind CSS config
+└── package.json            # Dependencies
+
+legacy_backend/             # Archived backend code
+├── app/                    # Flask application
+├── blender_addon/          # Blender integration (legacy)
+├── static_old/             # Old static files
+├── rag_data/               # RAG system data
+├── flask_app.py
+├── unified_server.py
+├── requirements.txt
+└── ...
+
+.gitignore
+README.md                   # This file
 ```
 
 ---
 
-## ⚡ Quick Start
+⚡ Quick Start
 
 ### System Requirements
 **Minimum:**
-- Processor: Intel Core i3 / AMD Ryzen 3 or equivalent
-- RAM: 4GB
+- Node.js: 16 or higher
+- npm or yarn package manager
 - Browser: Chrome 90+, Edge 90+, Firefox 88+
-- Python: 3.8 or higher
-
-**Recommended (for GPU acceleration):**
-- Processor: Intel Core i5 / **AMD Ryzen 5** or better
-- GPU: **AMD Radeon RX 6000/7000 series**, NVIDIA GTX 1650+, or Intel Iris Xe
-- RAM: 8GB+
-- Browser: Chrome/Edge (latest) for best WebGL support
 
 ### Prerequisites
-*   Python 3.8 or higher
-*   pip (Python package manager)
+*   Node.js 16+ with npm/yarn
 
-### Installation
+### Installation & Running
 
-1.  **Clone or Download** the repository.
-2.  **Install Dependencies**:
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/SANJEEVNATHCP/Taxcalm---AI-Powered-MSME-Assistance.git
+    cd Taxcalm---AI-Powered-MSME-Assistance
+    ```
+
+2.  **Navigate to the dashboard folder**:
+    ```bash
+    cd taxcalm-dashboard
+    ```
+
+3.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+
+4.  **Start the development server**:
+    ```bash
+    npm run dev
+    ```
+
+5.  **Open in Browser**:
+    Navigate to `http://localhost:5173` (or the URL shown in your terminal)
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+This creates an optimized build in the `dist/` folder.
+
+### Running Legacy Backend (Optional)
+
+If you need to run the legacy Flask backend for API integration:
+
+1.  **Navigate to legacy backend**:
+    ```bash
+    cd legacy_backend
+    ```
+
+2.  **Install Python dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
 
-### Running the Application
-
-1.  **Start the Server**:
+3.  **Start the Flask server**:
     ```bash
     python flask_app.py
     ```
-2.  **Open in Browser**:
-    Navigate to `http://localhost:8000`
+
+## 📦 Building & Deployment
+
+### Development
+```bash
+npm run dev
+```
+
+### Production Build
+```bash
+npm run build
+npm run preview  # Preview the production build locally
+```
+
+### Environment Setup
+Create a `.env` file in `taxcalm-dashboard/` if you need to configure any environment variables:
+```
+VITE_API_URL=http://localhost:8000  # For legacy backend integration
+```
 
 ---
 
-## 📱 Installing as an App (PWA)
+## 🗂️ Legacy Backend
 
-1.  Open `http://localhost:8000` in Chrome/Edge on your desktop or mobile.
-2.  Look for the **"Install"** icon in the address bar (Desktop) or select **"Add to Home Screen"** from the browser menu (Mobile).
-3.   The app will install and can now be launched directly from your home screen, even without an internet connection!
+The original Flask backend and related integrations (Blender addon, RAG system, etc.) have been archived in the `legacy_backend/` folder for reference and potential future use.
+
+**Legacy components:**
+- Flask REST API
+- Zoom scheduler integration  
+- Finance calculations engine
+- Blender addon for 3D visualizations
+- RAG (Retrieval-Augmented Generation) system
+- Database configurations
+
+To use legacy code, refer to `legacy_backend/README` (if available) or documentation in that folder.
+
+---
+
+## 🎮 Performance & GPU Acceleration
+
+The current Vite-based frontend is optimized for performance:
+- ⚡ **Lightning-fast builds** with Vite
+- 🚀 **React optimization** with lazy loading
+- 📊 **Smooth animations** with CSS & JS transitions
+- 💻 **Browser-native hardware acceleration** via WebGL
+
+For extreme computational workload requirements, GPU.js integration is available in the legacy backend.
 
 ---
 
