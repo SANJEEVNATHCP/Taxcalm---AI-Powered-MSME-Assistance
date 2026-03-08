@@ -48,6 +48,9 @@ Thumbs.db
 api_keys.db
 
 # Backups
+
+# Legacy backend - kept locally for reference only
+legacy_backend/
 backup_*/
 *.backup
 
